@@ -1,5 +1,7 @@
 import type { Docente } from '../config/tipos';
 import { diasEntre, estadoDia, eventosDelDia, fechaCorta, fechaLarga, franjasDelHorario, isoLocal, proximoLectivo } from './calendario';
+import { textos, type Idioma } from '../i18n/textos';
+import { textoError, type ErrorDescarga } from './fuente';
 import { MARCA_HECHO } from './normalizar';
 import type { Corregir, FechaClave, Franja, MiDia, Preparar, Ritmo } from './tipos';
 
@@ -32,7 +34,8 @@ export type Entrada = {
   ahora: Date;
   dia: MiDia | null;
   problemas?: string[];
-  errorDescarga?: string | null;
+  errorDescarga?: ErrorDescarga | null;
+  idioma?: Idioma;
 };
 
 const minutos = (hhmm: string) => {
@@ -58,10 +61,11 @@ export function estadosFranjas(franjas: Franja[], ahora: Date, esHoy: boolean): 
   });
 }
 
-export function construirVista({ docente, ahora, dia, problemas = [], errorDescarga }: Entrada): Vista {
+export function construirVista({ docente, ahora, dia, problemas = [], errorDescarga, idioma = 'es' }: Entrada): Vista {
+  const t = textos(idioma);
   const hoy = isoLocal(ahora);
   const origen: Vista['origen'] = !dia ? 'ninguno' : dia.fecha === hoy ? 'hoy' : 'anterior';
-  const cal = estadoDia(docente, hoy);
+  const cal = estadoDia(docente, hoy, idioma);
   const prox = proximoLectivo(docente, hoy);
 
   const lectivo = origen === 'hoy' ? dia!.lectivo : cal.lectivo;
@@ -69,25 +73,22 @@ export function construirVista({ docente, ahora, dia, problemas = [], errorDesca
   const franjasBase =
     origen === 'hoy'
       ? dia!.franjas
-      : franjasDelHorario(docente, hoy).map((f) =>
+      : franjasDelHorario(docente, hoy, idioma).map((f) =>
           f.tipo === 'clase' ? { ...f, ritmo: dia?.ritmo.find((r) => r.codigo === f.codigo)?.texto ?? '' } : f,
         );
 
   const alertas: Alerta[] = [];
-  if (errorDescarga) alertas.push({ nivel: 'error', texto: errorDescarga });
+  if (errorDescarga) alertas.push({ nivel: 'error', texto: textoError(errorDescarga, idioma) });
   if (origen === 'ninguno') {
-    alertas.push({ nivel: 'aviso', texto: 'Todavía no hay ningún resumen descargado. Muestro solo tu horario.' });
+    alertas.push({ nivel: 'aviso', texto: t.sinResumenNunca });
   } else if (origen === 'anterior') {
-    alertas.push({
-      nivel: 'aviso',
-      texto: `No hay resumen de hoy. Muestro ${cal.lectivo ? 'tu horario y ' : ''}lo pendiente del resumen del ${fechaCorta(dia!.fecha).toLowerCase()}.`,
-    });
+    alertas.push({ nivel: 'aviso', texto: t.sinResumenHoy(cal.lectivo, fechaCorta(dia!.fecha, idioma)) });
   }
   if (dia?.registroDesactualizado) {
-    alertas.push({ nivel: 'aviso', texto: `El registro lleva más de 2 días lectivos sin actualizarse (estado a: ${dia.registroEstadoA}).` });
+    alertas.push({ nivel: 'aviso', texto: t.registroViejo(dia.registroEstadoA ?? '') });
   }
   if (problemas.length) {
-    alertas.push({ nivel: 'info', texto: `El resumen traía algún dato con formato inesperado: ${problemas.join(' ')}` });
+    alertas.push({ nivel: 'info', texto: t.formatoRaro(problemas.join(' ')) });
   }
 
   const fechas = (dia?.fechas ?? [])
@@ -96,12 +97,12 @@ export function construirVista({ docente, ahora, dia, problemas = [], errorDesca
 
   return {
     hoy,
-    fechaTexto: fechaLarga(hoy),
+    fechaTexto: fechaLarga(hoy, idioma),
     resumen: origen === 'hoy' ? dia!.resumen : '',
     origen,
     lectivo,
     motivoNoLectivo: origen === 'hoy' ? dia!.motivoNoLectivo : cal.motivo,
-    proximoLectivo: origen === 'hoy' && dia!.proximoLectivo ? dia!.proximoLectivo : prox ? fechaCorta(prox) : undefined,
+    proximoLectivo: origen === 'hoy' && dia!.proximoLectivo ? dia!.proximoLectivo : prox ? fechaCorta(prox, idioma) : undefined,
     franjas: estadosFranjas(franjasBase, ahora, true),
     corregir: dia?.corregir ?? [],
     preparar: (dia?.preparar ?? []).filter((p) => p.fecha > hoy),

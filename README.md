@@ -9,6 +9,16 @@ Funciona sin conexión: lleva dentro el horario y el calendario del centro, y gu
 1. Cada mañana la tarea de Claude «Resumen diario de clases FyQ» lee el registro y deja en Drive un `mi_dia_fyq_AAAA-MM-DD_HHMM.json` ([texto de la tarea](docs/prompt_tarea_7_45.md), [esquema](docs/mi_dia.schema.json)).
 2. Un script de Google ([servir_mi_dia.gs](docs/servir_mi_dia.gs)) devuelve siempre el más reciente desde una dirección fija protegida con una clave.
 3. La app lo descarga al abrirse, al volver a ella y al deslizar hacia abajo. Si no hay red, enseña lo último que tenga y lo dice.
+4. El botón **Pedir resumen nuevo** pide al script que lance la tarea en ese momento (disparador API de la rutina; pasos 5–7 del script). La app espera a que aparezca el JSON nuevo, normalmente unos 2 minutos.
+
+## Aviso de la mañana y widget
+
+- **Aviso**: en Ajustes se activa y se elige la hora (07:30 por defecto). Se programan los próximos días lectivos con la primera clase, el material que hay que llevar y lo urgente (correcciones, exámenes y entregas a 3 días o menos). Se rehacen cada vez que llega un resumen.
+- **Widget** (Android): clase de ahora o la siguiente y lo urgente. Se refresca cada 30 minutos (y descarga si hace falta); ↻ lo actualiza al momento y tocarlo abre la app.
+
+## Temas e idiomas
+
+Ajustes > Apariencia: Laboratorio (claro u oscuro según el móvil), Claro, Colorido (un color por grupo) y Noche. Idiomas: castellano, valencià e inglés; el texto que escribe la tarea sigue en castellano.
 
 ## Instalar el APK
 
@@ -26,7 +36,7 @@ Todo lo personal está en [`src/config/docente.json`](src/config/docente.json): 
 
 ```bash
 npm install
-npm test            # pruebas de la lógica (calendario, validación, vista, descarga)
+npm test            # pruebas de la lógica (calendario, validación, vista, descarga, aviso, widget)
 npx tsc --noEmit    # tipos
 npx expo start      # servidor de desarrollo
 ```
@@ -34,5 +44,8 @@ npx expo start      # servidor de desarrollo
 Estructura:
 
 - `src/datos/`: tipos del resumen, validación tolerante (`normalizar.ts`), calendario, descarga y caché (`fuente.ts`) y la vista que pinta la pantalla (`vista.ts`).
-- `src/ui/`: tema (claro y oscuro) y componentes.
+- `src/ui/`: temas y componentes.
+- `src/i18n/`: textos de la app en cada idioma.
+- `src/avisos/`: contenido del aviso y del widget (`contenido.ts`) y programación de notificaciones.
+- `src/widget/`: widget de Android y su tarea en segundo plano.
 - `src/pantallas/`: Hoy y Ajustes.
