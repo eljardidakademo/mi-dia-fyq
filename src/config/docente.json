@@ -1,0 +1,74 @@
+{
+  "nombre": "Borja Martínez Sinisterra",
+  "centro": "IES Josep de Ribera (Xàtiva)",
+  "curso": "2026-27",
+  "finCurso": "2027-06-18",
+  "grupos": [
+    { "codigo": "1BD", "nombre": "1º Bach D", "aula": "B-33", "sesionesCurso": 137 },
+    { "codigo": "2C", "nombre": "2º ESO C", "aula": "A-10", "sesionesCurso": 105 },
+    { "codigo": "2E", "nombre": "2º ESO E", "aula": "A-24", "sesionesCurso": 104 },
+    { "codigo": "3E", "nombre": "3º ESO E", "aula": "A-28", "sesionesCurso": 70 },
+    { "codigo": "4B", "nombre": "4º ESO B", "aula": "B-7", "sesionesCurso": 101 },
+    { "codigo": "Taller", "nombre": "Taller 2º ESO", "aula": "Lab. Física", "sesionesCurso": 69 }
+  ],
+  "horario": {
+    "1": [
+      { "inicio": "08:00", "fin": "08:55", "grupo": "1BD" },
+      { "inicio": "08:55", "fin": "09:50", "grupo": "3E" },
+      { "inicio": "09:50", "fin": "10:45", "grupo": "2E" },
+      { "inicio": "10:45", "fin": "11:15", "que": "Guardia de patio" },
+      { "inicio": "11:15", "fin": "12:10", "que": "Atención a familias" },
+      { "inicio": "12:10", "fin": "13:05", "grupo": "4B" }
+    ],
+    "2": [
+      { "inicio": "08:00", "fin": "08:55", "grupo": "1BD" },
+      { "inicio": "08:55", "fin": "09:50", "grupo": "4B" },
+      { "inicio": "09:50", "fin": "10:45", "grupo": "2C" },
+      { "inicio": "11:15", "fin": "12:10", "que": "Reunión de departamento" }
+    ],
+    "3": [
+      { "inicio": "08:00", "fin": "08:55", "grupo": "1BD" },
+      { "inicio": "08:55", "fin": "09:50", "grupo": "2E" },
+      { "inicio": "09:50", "fin": "10:45", "grupo": "Taller" },
+      { "inicio": "11:15", "fin": "12:10", "que": "Reunión de departamento" },
+      { "inicio": "15:05", "fin": "16:00", "que": "Reunión de departamento" }
+    ],
+    "4": [
+      { "inicio": "08:00", "fin": "08:55", "grupo": "2C" },
+      { "inicio": "08:55", "fin": "09:50", "que": "Guardia" },
+      { "inicio": "09:50", "fin": "10:45", "que": "Coordinación didáctica" },
+      { "inicio": "11:15", "fin": "12:10", "grupo": "2E" },
+      { "inicio": "13:05", "fin": "14:00", "grupo": "3E" }
+    ],
+    "5": [
+      { "inicio": "08:00", "fin": "08:55", "grupo": "1BD" },
+      { "inicio": "08:55", "fin": "09:50", "grupo": "Taller" },
+      { "inicio": "09:50", "fin": "10:45", "grupo": "4B" },
+      { "inicio": "12:10", "fin": "13:05", "que": "Guardia" },
+      { "inicio": "13:05", "fin": "14:00", "grupo": "2C" }
+    ]
+  },
+  "sinClase": [
+    { "desde": "2026-10-09", "motivo": "Festivo" },
+    { "desde": "2026-10-12", "motivo": "Festivo" },
+    { "desde": "2026-12-07", "hasta": "2026-12-08", "motivo": "Festivo" },
+    { "desde": "2026-12-22", "motivo": "Nadales / comida de Navidad" },
+    { "desde": "2026-12-23", "hasta": "2027-01-06", "motivo": "Vacaciones de Navidad" },
+    { "desde": "2027-03-16", "hasta": "2027-03-19", "motivo": "Fallas" },
+    { "desde": "2027-03-24", "motivo": "Paellas (actividades)" },
+    { "desde": "2027-03-25", "hasta": "2027-04-05", "motivo": "Vacaciones de Pascua" },
+    { "desde": "2027-06-15", "hasta": "2027-06-18", "motivo": "Viaje de 4º ESO", "grupos": ["4B"] }
+  ],
+  "eventos": [
+    { "desde": "2026-10-23", "texto": "Asamblea de delegados" },
+    { "desde": "2026-11-10", "hasta": "2026-11-11", "texto": "Pendientes de Bachillerato" },
+    { "desde": "2026-12-01", "hasta": "2026-12-03", "texto": "1ª evaluación" },
+    { "desde": "2027-02-09", "hasta": "2027-02-10", "texto": "Pendientes de Bachillerato" },
+    { "desde": "2027-03-01", "hasta": "2027-03-05", "texto": "Semana Erasmus+, nieve y cultural: puede faltar alumnado" },
+    { "desde": "2027-03-09", "hasta": "2027-03-11", "texto": "2ª evaluación" },
+    { "desde": "2027-06-09", "texto": "Evaluación final 4º ESO" },
+    { "desde": "2027-06-09", "hasta": "2027-06-10", "texto": "Evaluación final 1º Bach" },
+    { "desde": "2027-06-16", "hasta": "2027-06-17", "texto": "Evaluación final 1º a 3º ESO" },
+    { "desde": "2027-06-18", "texto": "Último día de clase" }
+  ]
+}

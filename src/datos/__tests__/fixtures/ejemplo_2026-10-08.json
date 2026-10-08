@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "fecha": "2026-10-08",
+  "fechaTexto": "Jueves 8 de octubre",
+  "generadoEn": "2026-10-08T09:23:00+02:00",
+  "registroEstadoA": "jue 08/10, parte de 2º C (faltan 2º E y 3º E)",
+  "registroDesactualizado": false,
+  "lectivo": true,
+  "resumen": "3 clases (2º C ya hecha) · práctica de densidad y revisar deberes en 2º E · ficha de gráficas en 3º E",
+  "franjas": [
+    {
+      "inicio": "08:00",
+      "fin": "08:55",
+      "tipo": "clase",
+      "grupo": "2º ESO C",
+      "codigo": "2C",
+      "aula": "A-10",
+      "sesion": "S13",
+      "unidad": "UD1 Método científico",
+      "ritmo": "Retrasado ≈5",
+      "toca": "(ya hecho) Práctica «Volum i densitat de cossos regulars i irregulars», 1ª parte: volúmenes medidos y alguna masa",
+      "deberes": [],
+      "material": [
+        "Guion impreso (ya hecho)",
+        "Balanza electrónica (ya hecho)"
+      ],
+      "nota": "Clase dada: ha ido muy bien. Las masas que falten se terminan el jue 15/10."
+    },
+    {
+      "inicio": "08:55",
+      "fin": "09:50",
+      "tipo": "otra",
+      "toca": "Guardia"
+    },
+    {
+      "inicio": "09:50",
+      "fin": "10:45",
+      "tipo": "otra",
+      "toca": "Coordinación didáctica"
+    },
+    {
+      "inicio": "11:15",
+      "fin": "12:10",
+      "tipo": "clase",
+      "grupo": "2º ESO E",
+      "codigo": "2E",
+      "aula": "A-24",
+      "sesion": "S13",
+      "unidad": "UD1 Método científico",
+      "ritmo": "Retrasado ≈4",
+      "toca": "Revisar deberes (material pág. 16 y dos normas) · Práctica «Volum i densitat…» (1ª parte)",
+      "deberes": [
+        "Mirar el material de laboratorio de la pág. 16 y buscar dos normas de laboratorio"
+      ],
+      "material": [
+        "Guion impreso (ya hecho)",
+        "Por equipo: cinta métrica o regla, probeta de 100 mL",
+        "Balanza electrónica"
+      ],
+      "nota": ""
+    }
+  ],
+  "corregir": [
+    {
+      "grupo": "1º Bach D",
+      "codigo": "1BD",
+      "que": "Exámenes de Formulación",
+      "desde": "2026-10-07"
+    }
+  ],
+  "preparar": [
+    {
+      "fecha": "2026-10-13",
+      "fechaTexto": "Martes 13/10",
+      "grupo": "1º Bach D",
+      "codigo": "1BD",
+      "que": "Ficha 1.1"
+    },
+    {
+      "fecha": "2026-10-13",
+      "fechaTexto": "Martes 13/10",
+      "grupo": "4º ESO B",
+      "codigo": "4B",
+      "que": "Ficha caída libre Act. 1 y 2"
+    }
+  ],
+  "fechas": [
+    {
+      "fecha": "2026-10-13",
+      "grupo": "1º Bach D",
+      "codigo": "1BD",
+      "tipo": "examen",
+      "que": "Formulación (alumna que faltó): acordar con ella el día",
+      "estado": "por confirmar"
+    },
+    {
+      "fecha": "2026-10-19",
+      "grupo": "2º ESO E",
+      "codigo": "2E",
+      "tipo": "examen",
+      "que": "Examen UD1",
+      "estado": "fijado"
+    },
+    {
+      "fecha": "2026-10-19",
+      "grupo": "2º ESO E",
+      "codigo": "2E",
+      "tipo": "entrega",
+      "que": "Documento de la práctica «Volum i densitat» + cuaderno",
+      "estado": "fijado"
+    }
+  ],
+  "ritmo": [
+    {
+      "grupo": "1º Bach D",
+      "codigo": "1BD",
+      "desfase": 3.5,
+      "texto": "Adelantado 3–4 sesiones"
+    },
+    {
+      "grupo": "Taller 2º ESO",
+      "codigo": "Taller",
+      "desfase": 0,
+      "texto": "Según el plan del Bloque 1 (empieza el vie 16/10)"
+    },
+    {
+      "grupo": "2º ESO C",
+      "codigo": "2C",
+      "desfase": -5,
+      "texto": "Retrasado ≈5 sesiones"
+    }
+  ],
+  "avisos": [
+    "Vie 09/10 y lun 12/10: puente, sin clase."
+  ]
+}
