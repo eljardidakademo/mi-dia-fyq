@@ -1,7 +1,7 @@
 import docenteJson from '../../config/docente.json';
 import type { Docente } from '../../config/tipos';
 import { estadoDia, fechaCorta, fechaLarga, franjasDelHorario, proximoLectivo } from '../calendario';
-import { descargar } from '../fuente';
+import { descargar, esperarResumenNuevo, pedirResumenNuevo, textoError } from '../fuente';
 import { fechaDesdeTexto, normalizar } from '../normalizar';
 import { construirVista } from '../vista';
 import ejemplo from './fixtures/ejemplo_2026-10-08.json';
@@ -17,6 +17,13 @@ describe('calendario', () => {
   test('textos de fecha', () => {
     expect(fechaLarga('2026-10-08')).toBe('Jueves 8 de octubre');
     expect(fechaCorta('2026-10-13')).toBe('Martes 13/10');
+  });
+
+  test('textos de fecha en valenciano e inglés', () => {
+    expect(fechaLarga('2026-10-08', 'va')).toBe("Dijous 8 d'octubre");
+    expect(fechaLarga('2026-11-13', 'va')).toBe('Divendres 13 de novembre');
+    expect(fechaLarga('2026-10-08', 'en')).toBe('Thursday 8 October');
+    expect(fechaCorta('2026-10-13', 'va')).toBe('Dimarts 13/10');
   });
 
   test('puente del Pilar: sin clase y vuelta el martes 13', () => {
@@ -86,13 +93,21 @@ describe('vista', () => {
   });
 
   test('sin conexión al día siguiente lectivo: horario del martes y lo pendiente del jueves', () => {
-    const v = construirVista({ docente, ahora: a('2026-10-13', '07:30'), dia, errorDescarga: 'Sin conexión' });
+    const v = construirVista({ docente, ahora: a('2026-10-13', '07:30'), dia, errorDescarga: { codigo: 'sin_red' } });
     expect(v.origen).toBe('anterior');
     expect(v.franjas.filter((f) => f.tipo === 'clase').map((f) => f.tipo === 'clase' && f.codigo)).toEqual(['1BD', '4B', '2C']);
     expect(v.franjas[0]).toMatchObject({ estado: 'siguiente', ritmo: 'Adelantado 3–4 sesiones' });
     expect(v.corregir).toHaveLength(1);
     expect(v.preparar).toEqual([]); // los del 13/10 ya son de hoy
     expect(v.alertas.map((x) => x.nivel)).toEqual(['error', 'aviso']);
+    expect(v.alertas[0].texto).toContain('Sin conexión');
+  });
+
+  test('en valenciano: fecha y alertas traducidas', () => {
+    const v = construirVista({ docente, ahora: a('2026-10-13', '07:30'), dia, errorDescarga: { codigo: 'sin_red' }, idioma: 'va' });
+    expect(v.fechaTexto).toBe('Dimarts 13 d\'octubre');
+    expect(v.alertas[0].texto).toContain('Sense connexió');
+    expect(v.alertas[1].texto).toContain('dijous 08/10');
   });
 
   test('festivo sin resumen: no lectivo con el próximo día', () => {
@@ -115,16 +130,57 @@ describe('descargar', () => {
 
   test('clave incorrecta', async () => {
     const r = await descargar(aj, resp(JSON.stringify({ ok: false, error: 'clave' })));
-    expect(r).toEqual({ ok: false, error: expect.stringContaining('clave') });
+    expect(r).toEqual({ ok: false, error: { codigo: 'clave' } });
+    expect(textoError({ codigo: 'clave' })).toContain('clave');
   });
 
   test('página de inicio de sesión de Google en vez de JSON', async () => {
     const r = await descargar(aj, resp('<html>Iniciar sesión</html>'));
-    expect(r).toEqual({ ok: false, error: expect.stringContaining('Cualquier usuario') });
+    expect(r).toEqual({ ok: false, error: { codigo: 'no_json' } });
+    expect(textoError({ codigo: 'no_json' })).toContain('Cualquier usuario');
   });
 
   test('sin red', async () => {
     const f = jest.fn().mockRejectedValue(new Error('Network request failed')) as unknown as typeof fetch;
-    expect(await descargar(aj, f)).toEqual({ ok: false, error: expect.stringContaining('Sin conexión') });
+    expect(await descargar(aj, f)).toEqual({ ok: false, error: { codigo: 'sin_red' } });
+  });
+});
+
+describe('pedir resumen nuevo', () => {
+  const aj = { url: 'https://script.google.com/macros/s/X/exec', clave: 'k' };
+  const json = (o: unknown) => ({ ok: true, status: 200, text: () => Promise.resolve(JSON.stringify(o)) });
+
+  test('el script lanza la tarea', async () => {
+    const f = jest.fn().mockResolvedValue(json({ ok: true, pedidoEn: '2026-10-08T17:00:00Z' })) as unknown as typeof fetch;
+    expect(await pedirResumenNuevo(aj, f)).toEqual({ ok: true, pedidoEn: '2026-10-08T17:00:00Z' });
+    expect((f as jest.Mock).mock.calls[0][0]).toBe('https://script.google.com/macros/s/X/exec?clave=k&accion=regenerar');
+  });
+
+  test('script antiguo: devuelve el resumen en vez de lanzar la tarea', async () => {
+    const f = jest.fn().mockResolvedValue(json({ ok: true, archivo: 'x.json', datos: ejemplo })) as unknown as typeof fetch;
+    expect(await pedirResumenNuevo(aj, f)).toEqual({ ok: false, error: { codigo: 'version_vieja' } });
+  });
+
+  test('falta el token o la tarea falla', async () => {
+    const sinToken = jest.fn().mockResolvedValue(json({ ok: false, error: 'sin_token' })) as unknown as typeof fetch;
+    expect(await pedirResumenNuevo(aj, sinToken)).toEqual({ ok: false, error: { codigo: 'sin_token' } });
+    const falla = jest.fn().mockResolvedValue(json({ ok: false, error: 'rutina', detalle: 'HTTP 401' })) as unknown as typeof fetch;
+    const r = await pedirResumenNuevo(aj, falla);
+    expect(r).toEqual({ ok: false, error: { codigo: 'rutina', detalle: 'HTTP 401' } });
+    expect(!r.ok && textoError(r.error, 'en')).toBe("Couldn't start the Claude task: HTTP 401");
+  });
+
+  test('espera hasta que aparece un archivo distinto', async () => {
+    const viejo = json({ ok: true, archivo: 'mi_dia_fyq_2026-10-08_1545.json', datos: ejemplo });
+    const nuevo = json({ ok: true, archivo: 'mi_dia_fyq_2026-10-08_1802.json', datos: ejemplo });
+    const f = jest.fn().mockResolvedValueOnce(viejo).mockResolvedValueOnce(viejo).mockResolvedValue(nuevo) as unknown as typeof fetch;
+    const r = await esperarResumenNuevo(aj, 'mi_dia_fyq_2026-10-08_1545.json', { cadaMs: 1, maxMs: 5000, fetchFn: f });
+    expect(r.ok && r.guardado.archivo).toBe('mi_dia_fyq_2026-10-08_1802.json');
+    expect((f as jest.Mock).mock.calls).toHaveLength(3);
+  });
+
+  test('si no llega a tiempo lo dice', async () => {
+    const f = jest.fn().mockResolvedValue(json({ ok: true, archivo: 'a.json', datos: ejemplo })) as unknown as typeof fetch;
+    expect(await esperarResumenNuevo(aj, 'a.json', { cadaMs: 1, maxMs: 20, fetchFn: f })).toEqual({ ok: false, error: { codigo: 'tarda' } });
   });
 });

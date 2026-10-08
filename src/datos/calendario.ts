@@ -1,8 +1,6 @@
 import type { Docente } from '../config/tipos';
+import { textos, type Idioma } from '../i18n/textos';
 import type { Franja } from './tipos';
-
-const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 const mayus = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -29,20 +27,21 @@ export function diasEntre(desde: string, hasta: string): number {
 }
 
 /** "Jueves 8 de octubre" */
-export function fechaLarga(iso: string): string {
+export function fechaLarga(iso: string, idioma: Idioma = 'es'): string {
   const d = desdeIso(iso);
-  return `${mayus(DIAS[d.getDay()])} ${d.getDate()} de ${MESES[d.getMonth()]}`;
+  const t = textos(idioma);
+  return t.fechaLarga(mayus(t.dias[d.getDay()]), d.getDate(), t.meses[d.getMonth()]);
 }
 
 /** "Martes 13/10" */
-export function fechaCorta(iso: string): string {
+export function fechaCorta(iso: string, idioma: Idioma = 'es'): string {
   const d = desdeIso(iso);
   const p = (n: number) => String(n).padStart(2, '0');
-  return `${mayus(DIAS[d.getDay()])} ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
+  return `${mayus(textos(idioma).dias[d.getDay()])} ${p(d.getDate())}/${p(d.getMonth() + 1)}`;
 }
 
-export function mesCorto(iso: string): string {
-  return MESES[desdeIso(iso).getMonth()].slice(0, 3);
+export function mesCorto(iso: string, idioma: Idioma = 'es'): string {
+  return textos(idioma).meses[desdeIso(iso).getMonth()].slice(0, 3);
 }
 
 const enRango = (iso: string, desde: string, hasta?: string) => iso >= desde && iso <= (hasta ?? desde);
@@ -54,10 +53,11 @@ export type EstadoDia = {
   gruposSinClase: { codigo: string; motivo: string }[];
 };
 
-export function estadoDia(doc: Docente, iso: string): EstadoDia {
+export function estadoDia(doc: Docente, iso: string, idioma: Idioma = 'es'): EstadoDia {
   const dia = desdeIso(iso).getDay();
-  if (dia === 0 || dia === 6) return { lectivo: false, motivo: 'Fin de semana', gruposSinClase: [] };
-  if (iso > doc.finCurso) return { lectivo: false, motivo: 'Curso terminado', gruposSinClase: [] };
+  const t = textos(idioma);
+  if (dia === 0 || dia === 6) return { lectivo: false, motivo: t.finDeSemana, gruposSinClase: [] };
+  if (iso > doc.finCurso) return { lectivo: false, motivo: t.cursoTerminado, gruposSinClase: [] };
 
   const gruposSinClase: EstadoDia['gruposSinClase'] = [];
   for (const s of doc.sinClase) {
@@ -87,8 +87,8 @@ export function eventosDelDia(doc: Docente, iso: string): string[] {
  * Las franjas del día sacadas solo del horario. Es lo que se ve cuando no hay
  * resumen del día descargado: al menos qué clase toca, a qué hora y dónde.
  */
-export function franjasDelHorario(doc: Docente, iso: string): Franja[] {
-  const estado = estadoDia(doc, iso);
+export function franjasDelHorario(doc: Docente, iso: string, idioma: Idioma = 'es'): Franja[] {
+  const estado = estadoDia(doc, iso, idioma);
   if (!estado.lectivo) return [];
   const dia = String(desdeIso(iso).getDay()) as keyof Docente['horario'];
   return (doc.horario[dia] ?? []).map((h): Franja => {
@@ -105,7 +105,7 @@ export function franjasDelHorario(doc: Docente, iso: string): Franja[] {
       sesion: '',
       unidad: '',
       ritmo: '',
-      toca: pierde ? `Sin clase: ${pierde.motivo}` : '',
+      toca: pierde ? textos(idioma).sinClase(pierde.motivo) : '',
       deberes: [],
       material: [],
       nota: '',

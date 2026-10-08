@@ -1,20 +1,26 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 
+import docenteJson from '../config/docente.json';
 import { mesCorto, desdeIso } from '../datos/calendario';
 import { MARCA_HECHO, quitarMarcaHecho } from '../datos/normalizar';
 import type { FranjaVista, Vista } from '../datos/vista';
-import { colorRitmo, fuentes, type Colores } from './tema';
+import { colorGrupo, colorRitmo, fuentes, useIdioma, useTextos, type Colores } from './tema';
 
 type ConC = { c: Colores };
+
+const CODIGOS = docenteJson.grupos.map((g) => g.codigo);
+/** Color propio del grupo en temas como Colorido; si no, null. */
+const deGrupo = (c: Colores, codigo: string) => colorGrupo(c, CODIGOS.indexOf(codigo));
 
 /** Casilla tipo tabla periódica: sesión arriba, código grande, aula abajo. */
 export function Ficha({ c, sesion, codigo, aula, ritmo }: ConC & { sesion: string; codigo: string; aula: string; ritmo: string }) {
   const borde = ritmo ? colorRitmo(c, ritmo).color : c.borde;
+  const g = deGrupo(c, codigo);
   return (
-    <View style={[s.ficha, { borderColor: borde, backgroundColor: c.superficie2 }]}>
+    <View style={[s.ficha, { borderColor: borde, backgroundColor: g?.fondo ?? c.superficie2 }]}>
       <Text style={[s.fichaSesion, { color: c.tinta2 }]}>{sesion || ' '}</Text>
-      <Text style={[s.fichaCodigo, { color: c.tinta }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text style={[s.fichaCodigo, { color: g?.color ?? c.tinta }]} numberOfLines={1} adjustsFontSizeToFit>
         {codigo}
       </Text>
       <Text style={[s.fichaAula, { color: c.tinta2 }]} numberOfLines={1}>
@@ -43,14 +49,13 @@ export function Casilla({ c, texto, marcada, onPress }: ConC & { texto: string; 
   );
 }
 
-const ESTADO_TXT: Partial<Record<FranjaVista['estado'], string>> = { ahora: 'Ahora', siguiente: 'Siguiente', hecha: 'Hecha' };
-
 export function TarjetaFranja({
   c,
   f,
   hechos,
   alternar,
 }: ConC & { f: FranjaVista; hechos: Set<string>; alternar: (id: string) => void }) {
+  const t = useTextos();
   const apagada = f.estado === 'pasada' || f.estado === 'hecha';
   const hora = (
     <View style={s.horaCol}>
@@ -65,13 +70,13 @@ export function TarjetaFranja({
         {hora}
         <View style={[s.otra, { borderColor: f.estado === 'ahora' ? c.acento : c.borde }]}>
           <Text style={[s.otraTexto, { color: c.tinta2 }]}>{f.toca}</Text>
-          {f.estado === 'ahora' && <Etiqueta texto="Ahora" color={c.acento} fondo={c.acentoSuave} />}
+          {f.estado === 'ahora' && <Etiqueta texto={t.estado.ahora} color={c.acento} fondo={c.acentoSuave} />}
         </View>
       </View>
     );
   }
 
-  const estadoTxt = ESTADO_TXT[f.estado];
+  const estadoTxt = f.estado === 'ahora' || f.estado === 'siguiente' || f.estado === 'hecha' ? t.estado[f.estado] : undefined;
   const destacada = f.estado === 'ahora' || f.estado === 'siguiente';
   const toca = quitarMarcaHecho(f.toca);
   const id = (tipo: string, i: number) => `${f.inicio}|${f.codigo}|${tipo}|${i}`;
@@ -99,14 +104,14 @@ export function TarjetaFranja({
         </View>
         {!!toca && <Text style={[s.toca, { color: c.tinta }]}>{toca}</Text>}
         {f.deberes.length > 0 && (
-          <Bloque c={c} titulo="Revisar deberes">
+          <Bloque c={c} titulo={t.revisarDeberes}>
             {f.deberes.map((d, i) => (
               <Casilla key={i} c={c} texto={d} marcada={hechos.has(id('d', i))} onPress={() => alternar(id('d', i))} />
             ))}
           </Bloque>
         )}
         {f.material.length > 0 && (
-          <Bloque c={c} titulo="Material">
+          <Bloque c={c} titulo={t.material}>
             {f.material.map((m, i) => {
               const yaHecho = MARCA_HECHO.test(m);
               return (
@@ -146,15 +151,16 @@ export function Seccion({ c, titulo, children }: ConC & { titulo: string; childr
 }
 
 export function Corregir({ c, v }: ConC & { v: Vista }) {
+  const t = useTextos();
   if (!v.corregir.length) return null;
   return (
-    <Seccion c={c} titulo="Pendiente de corregir">
+    <Seccion c={c} titulo={t.pendienteCorregir}>
       {v.corregir.map((x, i) => (
         <View key={i} style={s.filaLista}>
-          <Text style={[s.codigoMini, { color: c.acento }]}>{x.codigo}</Text>
+          <Text style={[s.codigoMini, { color: deGrupo(c, x.codigo)?.color ?? c.acento }]}>{x.codigo}</Text>
           <View style={{ flex: 1 }}>
             <Text style={[s.texto, { color: c.tinta }]}>{x.que}</Text>
-            <Text style={[s.pequeno, { color: c.tenue }]}>desde el {x.desde.split('-').reverse().slice(0, 2).join('/')}</Text>
+            <Text style={[s.pequeno, { color: c.tenue }]}>{t.desdeEl(x.desde.split('-').reverse().slice(0, 2).join('/'))}</Text>
           </View>
         </View>
       ))}
@@ -163,17 +169,18 @@ export function Corregir({ c, v }: ConC & { v: Vista }) {
 }
 
 export function Preparar({ c, v }: ConC & { v: Vista }) {
+  const t = useTextos();
   if (!v.preparar.length) return null;
   const porFecha = new Map<string, typeof v.preparar>();
   for (const p of v.preparar) porFecha.set(p.fechaTexto || p.fecha, [...(porFecha.get(p.fechaTexto || p.fecha) ?? []), p]);
   return (
-    <Seccion c={c} titulo="Material de los próximos días">
+    <Seccion c={c} titulo={t.materialProximos}>
       {[...porFecha].map(([fecha, items]) => (
         <View key={fecha} style={{ gap: 6 }}>
           <Text style={[s.bloqueTitulo, { color: c.tenue }]}>{fecha.toUpperCase()}</Text>
           {items.map((p, i) => (
             <View key={i} style={s.filaLista}>
-              <Text style={[s.codigoMini, { color: c.acento }]}>{p.codigo}</Text>
+              <Text style={[s.codigoMini, { color: deGrupo(c, p.codigo)?.color ?? c.acento }]}>{p.codigo}</Text>
               <Text style={[s.texto, { color: c.tinta, flex: 1 }]}>{p.que}</Text>
             </View>
           ))}
@@ -184,24 +191,26 @@ export function Preparar({ c, v }: ConC & { v: Vista }) {
 }
 
 export function Fechas({ c, v }: ConC & { v: Vista }) {
+  const t = useTextos();
+  const idioma = useIdioma();
   if (!v.fechas.length) return null;
   const est = { fijado: [c.verde, c.verdeSuave], provisional: [c.ambar, c.ambarSuave], 'por confirmar': [c.rojo, c.rojoSuave] } as const;
   return (
-    <Seccion c={c} titulo="Exámenes y entregas">
+    <Seccion c={c} titulo={t.examenesEntregas}>
       {v.fechas.map((f, i) => (
         <View key={i} style={s.filaLista}>
           <View style={[s.calendario, { borderColor: c.borde }]}>
-            <Text style={[s.calMes, { backgroundColor: f.tipo === 'examen' ? c.rojo : c.acento }]}>{mesCorto(f.fecha).toUpperCase()}</Text>
+            <Text style={[s.calMes, { backgroundColor: f.tipo === 'examen' ? c.rojo : c.acento }]}>{mesCorto(f.fecha, idioma).toUpperCase()}</Text>
             <Text style={[s.calDia, { color: c.tinta }]}>{desdeIso(f.fecha).getDate()}</Text>
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={[s.texto, { color: c.tinta }]}>
-              <Text style={{ fontFamily: fuentes.textoNegrita }}>{f.tipo === 'examen' ? 'Examen' : 'Entrega'} {f.codigo}</Text> · {f.que}
+              <Text style={{ fontFamily: fuentes.textoNegrita }}>{f.tipo === 'examen' ? t.examen : t.entrega} {f.codigo}</Text> · {f.que}
             </Text>
             <View style={s.filaEtiquetas}>
-              <Etiqueta texto={f.estado} color={est[f.estado][0]} fondo={est[f.estado][1]} />
+              <Etiqueta texto={t.estadoFecha[f.estado]} color={est[f.estado][0]} fondo={est[f.estado][1]} />
               <Text style={[s.pequeno, { color: c.tinta2 }]}>
-                {f.enDias === 0 ? 'hoy' : f.enDias === 1 ? 'mañana' : `en ${f.enDias} días`}
+                {t.enDias(f.enDias)}
               </Text>
             </View>
           </View>
@@ -213,17 +222,18 @@ export function Fechas({ c, v }: ConC & { v: Vista }) {
 
 /** Barras divergentes: retraso a la izquierda, adelanto a la derecha. */
 export function RitmoGrupos({ c, v }: ConC & { v: Vista }) {
+  const t = useTextos();
   if (!v.ritmo.length) return null;
   const max = Math.max(5, ...v.ritmo.map((r) => Math.abs(r.desfase)));
   return (
-    <Seccion c={c} titulo="Ritmo respecto a la programación">
+    <Seccion c={c} titulo={t.ritmo}>
       {v.ritmo.map((r) => {
         const ancho = `${(Math.abs(r.desfase) / max) * 50}%` as const;
         const col = colorRitmo(c, r.desfase).color;
         return (
           <View key={r.codigo} style={{ gap: 2 }}>
             <View style={s.filaRitmo}>
-              <Text style={[s.codigoMini, { color: c.tinta, width: 60 }]}>{r.codigo}</Text>
+              <Text style={[s.codigoMini, { color: deGrupo(c, r.codigo)?.color ?? c.tinta, width: 60 }]}>{r.codigo}</Text>
               <View style={[s.pista, { backgroundColor: c.superficie2 }]}>
                 <View style={[s.eje, { backgroundColor: c.borde }]} />
                 {r.desfase !== 0 && (
@@ -241,9 +251,10 @@ export function RitmoGrupos({ c, v }: ConC & { v: Vista }) {
 }
 
 export function Avisos({ c, v }: ConC & { v: Vista }) {
+  const t = useTextos();
   if (!v.avisos.length) return null;
   return (
-    <Seccion c={c} titulo="Avisos">
+    <Seccion c={c} titulo={t.avisos}>
       {v.avisos.map((a, i) => (
         <Text key={i} style={[s.texto, { color: c.tinta }]}>
           • {a}
