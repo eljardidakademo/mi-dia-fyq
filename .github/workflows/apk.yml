@@ -1,0 +1,49 @@
+name: Pruebas y APK
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx jest --ci
+        env:
+          TZ: Europe/Madrid
+
+  apk:
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      # Genera la carpeta android/ a partir de app.json (no se guarda en el repositorio).
+      - run: npx expo prebuild --platform android --no-install
+      # La versión release va firmada con la clave de depuración de la plantilla, que es
+      # siempre la misma: sirve para instalar a mano y actualizar encima, no para Google Play.
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mi-dia-fyq-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 30

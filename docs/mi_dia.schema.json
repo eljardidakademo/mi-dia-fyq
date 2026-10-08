@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mi-dia-fyq/mi_dia.schema.json",
+  "title": "Resumen diario Mi día FyQ (versión 1)",
+  "description": "Lo que genera la tarea de las 7:45 cada día lectivo y lo que pintan el panel web y la app.",
+  "type": "object",
+  "required": ["version", "fecha", "fechaTexto", "generadoEn", "registroEstadoA", "registroDesactualizado", "lectivo", "resumen", "franjas", "corregir", "preparar", "fechas", "ritmo", "avisos"],
+  "properties": {
+    "version": { "const": 1, "description": "Versión del esquema, no del documento." },
+    "fecha": { "$ref": "#/$defs/fechaISO" },
+    "fechaTexto": { "type": "string", "minLength": 1, "examples": ["Jueves 8 de octubre"] },
+    "generadoEn": { "type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?([+-]\\d{2}:\\d{2}|Z)$" },
+    "registroEstadoA": { "type": "string", "description": "Copia del campo «Estado a» del registro." },
+    "registroDesactualizado": { "type": "boolean", "description": "true si «Estado a» tiene más de 2 días lectivos de antigüedad." },
+    "lectivo": { "type": "boolean" },
+    "motivoNoLectivo": { "type": "string" },
+    "proximoLectivo": { "type": "string", "examples": ["Martes 13/10"] },
+    "resumen": { "type": "string", "description": "Una línea para la notificación y la cabecera." },
+    "franjas": { "type": "array", "items": { "$ref": "#/$defs/franja" }, "description": "Vacío si no es lectivo." },
+    "corregir": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["grupo", "codigo", "que", "desde"],
+        "additionalProperties": false,
+        "properties": {
+          "grupo": { "type": "string" },
+          "codigo": { "$ref": "#/$defs/codigo" },
+          "que": { "type": "string", "minLength": 1 },
+          "desde": { "$ref": "#/$defs/fechaISO", "description": "Día en que se recogió o se hizo. Siempre AAAA-MM-DD, nunca texto." }
+        }
+      }
+    },
+    "preparar": {
+      "type": "array",
+      "description": "Columna Preparar de los próximos 3 días lectivos, sin contar hoy.",
+      "items": {
+        "type": "object",
+        "required": ["fecha", "fechaTexto", "grupo", "codigo", "que"],
+        "additionalProperties": false,
+        "properties": {
+          "fecha": { "$ref": "#/$defs/fechaISO" },
+          "fechaTexto": { "type": "string" },
+          "grupo": { "type": "string" },
+          "codigo": { "$ref": "#/$defs/codigo" },
+          "que": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "fechas": {
+      "type": "array",
+      "description": "Exámenes y entregas de los próximos 21 días. Un examen y una entrega del mismo día son dos entradas.",
+      "items": {
+        "type": "object",
+        "required": ["fecha", "grupo", "codigo", "tipo", "que", "estado"],
+        "additionalProperties": false,
+        "properties": {
+          "fecha": { "$ref": "#/$defs/fechaISO" },
+          "grupo": { "type": "string" },
+          "codigo": { "$ref": "#/$defs/codigo" },
+          "tipo": { "enum": ["examen", "entrega"] },
+          "que": { "type": "string", "minLength": 1 },
+          "estado": { "enum": ["fijado", "provisional", "por confirmar"] }
+        }
+      }
+    },
+    "ritmo": {
+      "type": "array",
+      "description": "Un elemento por grupo.",
+      "items": {
+        "type": "object",
+        "required": ["grupo", "codigo", "desfase", "texto"],
+        "additionalProperties": false,
+        "properties": {
+          "grupo": { "type": "string" },
+          "codigo": { "$ref": "#/$defs/codigo" },
+          "desfase": { "type": "number", "description": "Sesiones. Negativo = retraso, positivo = adelanto, 0 = al día o sin dato." },
+          "texto": { "type": "string" }
+        }
+      }
+    },
+    "avisos": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "lectivo": { "const": false } } },
+      "then": { "required": ["motivoNoLectivo", "proximoLectivo"] }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "fechaISO": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "hora": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    "codigo": { "type": "string", "minLength": 1, "maxLength": 8, "examples": ["1BD", "2C", "2E", "3E", "4B", "Taller"] },
+    "franja": {
+      "type": "object",
+      "required": ["inicio", "fin", "tipo", "toca"],
+      "properties": {
+        "inicio": { "$ref": "#/$defs/hora" },
+        "fin": { "$ref": "#/$defs/hora" },
+        "tipo": { "enum": ["clase", "otra"] },
+        "toca": { "type": "string", "description": "Empieza por «(ya hecho)» si la clase ya se dio." }
+      },
+      "if": { "properties": { "tipo": { "const": "clase" } } },
+      "then": {
+        "required": ["grupo", "codigo", "aula", "sesion", "unidad", "ritmo", "deberes", "material", "nota"],
+        "properties": {
+          "inicio": true, "fin": true, "tipo": true, "toca": true,
+          "grupo": { "type": "string" },
+          "codigo": { "$ref": "#/$defs/codigo" },
+          "aula": { "type": "string" },
+          "sesion": { "type": "string", "pattern": "^S\\d+$|^$" },
+          "unidad": { "type": "string" },
+          "ritmo": { "type": "string" },
+          "deberes": { "type": "array", "items": { "type": "string" } },
+          "material": { "type": "array", "items": { "type": "string" } },
+          "nota": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "else": {
+        "properties": { "inicio": true, "fin": true, "tipo": true, "toca": true },
+        "additionalProperties": false
+      }
+    }
+  }
+}
