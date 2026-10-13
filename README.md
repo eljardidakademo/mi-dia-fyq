@@ -11,6 +11,10 @@ Funciona sin conexión: lleva dentro el horario y el calendario del centro, y gu
 3. La app lo descarga al abrirse, al volver a ella y al deslizar hacia abajo. Si no hay red, enseña lo último que tenga y lo dice.
 4. El botón **Pedir resumen nuevo** pide al script que lance la tarea en ese momento (disparador API de la rutina; pasos 5–7 del script). La app espera a que aparezca el JSON nuevo, normalmente unos 2 minutos.
 
+## Partes de clase por voz
+
+En las clases que ya han empezado aparece el botón **🎙 Parte**. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y los atrasados que aún no están en el registro salen como aviso. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
+
 ## Aviso de la mañana y widget
 
 - **Aviso**: en Ajustes se activa y se elige la hora (07:30 por defecto). Se programan los próximos días lectivos con la primera clase, el material que hay que llevar y lo urgente (correcciones, exámenes y entregas a 3 días o menos). Se rehacen cada vez que llega un resumen.

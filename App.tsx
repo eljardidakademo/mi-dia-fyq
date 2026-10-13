@@ -13,6 +13,15 @@ import docenteJson from './src/config/docente.json';
 import type { Docente } from './src/config/tipos';
 import { isoLocal } from './src/datos/calendario';
 import {
+  enviarCola,
+  idParte,
+  leerCola,
+  leerEstadosPartes,
+  mandarOEncolar,
+  type EstadoParte,
+  type Parte,
+} from './src/datos/partes';
+import {
   actualizar,
   esperarResumenNuevo,
   guardarAjustes,
@@ -32,9 +41,10 @@ import {
 } from './src/datos/fuente';
 import { textos } from './src/i18n/textos';
 import { normalizar } from './src/datos/normalizar';
-import { construirVista } from './src/datos/vista';
+import { construirVista, type FranjaVista } from './src/datos/vista';
 import { Ajustes } from './src/pantallas/Ajustes';
 import { Hoy } from './src/pantallas/Hoy';
+import { DictarParte } from './src/ui/DictarParte';
 import { ProveedorIdioma, useColoresDe } from './src/ui/tema';
 import { NOMBRE_WIDGET } from './src/widget/WidgetHoy';
 import { pintarWidgets } from './src/widget/tarea';
@@ -90,6 +100,8 @@ export default function App() {
     if (!ajustes?.url) return;
     ultimoIntento.current = Date.now();
     setRefrescando(true);
+    // Primero los partes que se quedaron sin enviar, para que el resumen los tenga.
+    if (await enviarCola(ajustes)) leerPartes();
     const r = await actualizar(ajustes);
     if (r.ok) {
       setGuardado(r.guardado);
@@ -100,6 +112,26 @@ export default function App() {
     setAhora(new Date());
     setRefrescando(false);
   }, [ajustes]);
+
+  // Pide a la tarea de Claude un resumen nuevo y espera a que llegue.
+  // Espera a que la tarea deje un resumen distinto de `previo` y lo enseña.
+  const esperarNuevo = useCallback(
+    async (a: TAjustes, previo: string) => {
+      setPidiendo(true);
+      const r = await esperarResumenNuevo(a, previo);
+      if (r.ok) {
+        setGuardado(r.guardado);
+        setError(null);
+        setAvisoPedido({ ok: true, texto: t.resumenNuevoListo });
+      } else {
+        setAvisoPedido({ ok: false, texto: textoError(r.error, prefs.idioma) });
+      }
+      ultimoIntento.current = Date.now();
+      setAhora(new Date());
+      setPidiendo(false);
+    },
+    [prefs.idioma, t],
+  );
 
   // Pide a la tarea de Claude un resumen nuevo y espera a que llegue.
   const pedirResumen = useCallback(async () => {
@@ -113,18 +145,54 @@ export default function App() {
       setPidiendo(false);
       return;
     }
-    const r = await esperarResumenNuevo(ajustes, previo);
-    if (r.ok) {
-      setGuardado(r.guardado);
-      setError(null);
-      setAvisoPedido({ ok: true, texto: t.resumenNuevoListo });
-    } else {
-      setAvisoPedido({ ok: false, texto: textoError(r.error, prefs.idioma) });
-    }
-    ultimoIntento.current = Date.now();
-    setAhora(new Date());
-    setPidiendo(false);
-  }, [ajustes, pidiendo, guardado, prefs.idioma, t]);
+    await esperarNuevo(ajustes, previo);
+  }, [ajustes, pidiendo, guardado, prefs.idioma, esperarNuevo]);
+
+  // Partes de clase dictados: estado por clase de hoy y los que esperan conexión.
+  const [parteDe, setParteDe] = useState<(FranjaVista & { tipo: 'clase' }) | null>(null);
+  const [enviandoParte, setEnviandoParte] = useState(false);
+  const [resultadoParte, setResultadoParte] = useState<{ ok: boolean; texto: string } | null>(null);
+  const [estadosPartes, setEstadosPartes] = useState<Record<string, EstadoParte>>({});
+  const [partesEnCola, setPartesEnCola] = useState(0);
+
+  const leerPartes = useCallback(async () => {
+    const [e, cola] = await Promise.all([leerEstadosPartes(hoy), leerCola()]);
+    setEstadosPartes(e);
+    setPartesEnCola(cola.length);
+  }, [hoy]);
+  useEffect(() => {
+    leerPartes();
+  }, [leerPartes]);
+
+  const enviarParteDictado = useCallback(
+    async (texto: string) => {
+      if (!parteDe || !ajustes) return;
+      setEnviandoParte(true);
+      const parte: Parte = {
+        id: idParte(hoy, parteDe.inicio, parteDe.codigo),
+        fecha: hoy,
+        inicio: parteDe.inicio,
+        codigo: parteDe.codigo,
+        grupo: parteDe.grupo,
+        sesion: parteDe.sesion,
+        texto,
+        creadoEn: new Date().toISOString(),
+      };
+      const previo = guardado?.archivo ?? '';
+      const r = await mandarOEncolar(ajustes, parte);
+      await leerPartes();
+      setEnviandoParte(false);
+      if (!r.ok) {
+        setResultadoParte({ ok: false, texto: t.parteEnCola(textoError(r.error, prefs.idioma)) });
+        return;
+      }
+      setParteDe(null);
+      setResultadoParte(null);
+      setAvisoPedido({ ok: true, texto: r.lanzado ? t.parteOk : t.parteOkSinTarea });
+      if (r.lanzado && !pidiendo) await esperarNuevo(ajustes, previo);
+    },
+    [parteDe, ajustes, hoy, guardado, leerPartes, t, prefs.idioma, pidiendo, esperarNuevo],
+  );
 
   // Al abrir y al volver a la app: actualiza si hace más de 5 minutos del último intento.
   useEffect(() => {
@@ -231,8 +299,22 @@ export default function App() {
             pidiendo={pidiendo}
             pedirResumen={pedirResumen}
             aviso={avisoPedido}
+            abrirParte={(f) => {
+              setResultadoParte(null);
+              setParteDe(f);
+            }}
+            estadosPartes={estadosPartes}
+            partesEnCola={partesEnCola}
           />
         )}
+        <DictarParte
+          c={c}
+          clase={parteDe}
+          enviando={enviandoParte}
+          resultado={resultadoParte}
+          enviar={enviarParteDictado}
+          cerrar={() => setParteDe(null)}
+        />
       </SafeAreaView>
     </SafeAreaProvider>
     </ProveedorIdioma>
