@@ -25,15 +25,25 @@
  *     Google pedirá permiso para «conectarse a un servicio externo»: es la llamada a Claude.
  *     La dirección /exec no cambia.
  *
+ * Partes de clase dictados en la app: llegan por POST, se apuntan en el documento
+ * «Partes FyQ 26-27» de la misma carpeta (se crea solo la primera vez) y se lanza la tarea
+ * para que el resumen los tenga en cuenta. Si aún no hay token, el parte queda guardado y
+ * entra en la siguiente pasada programada.
+ *
  * Respuestas (siempre JSON):
- *   ?clave=…                    { ok: true,  archivo, creado, datos: { ...resumen... } }
- *   ?clave=…&accion=regenerar   { ok: true,  pedidoEn, repetido }  (la tarea tarda unos 2 minutos)
- *   errores                     { ok: false, error: "clave" | "sin_archivos" | "json_invalido" | "sin_token" | "rutina", detalle }
+ *   GET  ?clave=…                    { ok: true,  archivo, creado, datos: { ...resumen... } }
+ *   GET  ?clave=…&accion=regenerar   { ok: true,  pedidoEn, repetido }  (la tarea tarda unos 2 minutos)
+ *   POST { clave, accion: "parte", parte: { fecha, inicio, codigo, grupo, sesion, texto, id } }
+ *                                    { ok: true,  guardado: true, lanzado, motivo }
+ *   errores                          { ok: false, error: "clave" | "sin_archivos" | "json_invalido" | "sin_token" | "rutina" | "accion", detalle }
  */
 
 const PATRON = /^mi_dia_fyq_(\d{4}-\d{2}-\d{2})(?:_(\d{4}))?\.json$/;
 // Si se pulsa el botón varias veces seguidas, solo se lanza una tarea cada 3 minutos.
 const ESPERA_ENTRE_PEDIDOS_MS = 3 * 60 * 1000;
+// Un parte lanza la tarea aunque se acabe de pedir un resumen, pero no más de una vez por minuto.
+const ESPERA_ENTRE_PARTES_MS = 60 * 1000;
+const TITULO_PARTES = 'Partes FyQ 26-27';
 
 function doGet(e) {
   const props = PropertiesService.getScriptProperties();
@@ -61,8 +71,71 @@ function doGet(e) {
   }
 }
 
+function doPost(e) {
+  const props = PropertiesService.getScriptProperties();
+  let cuerpo;
+  try {
+    cuerpo = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return responder({ ok: false, error: 'accion', detalle: 'El cuerpo no es JSON.' });
+  }
+  if (!cuerpo || cuerpo.clave !== props.getProperty('CLAVE')) {
+    return responder({ ok: false, error: 'clave', detalle: 'Clave incorrecta o ausente.' });
+  }
+  if (cuerpo.accion === 'parte') return responder(recibirParte(props, cuerpo.parte));
+  return responder({ ok: false, error: 'accion', detalle: 'Acción desconocida.' });
+}
+
+function recibirParte(props, p) {
+  if (!p || !p.texto || !p.fecha) return { ok: false, error: 'accion', detalle: 'Parte vacío.' };
+  const limpio = (x) => String(x || '').replace(/\s+/g, ' ').trim();
+  const hora = Utilities.formatDate(new Date(), 'Europe/Madrid', 'HH:mm');
+  const linea =
+    limpio(p.fecha) + ' · ' + limpio(p.inicio) + ' · ' + limpio(p.grupo) + ' (' + limpio(p.codigo) + ')' +
+    (p.sesion ? ' · ' + limpio(p.sesion) : '') + ' · enviado ' + hora + '\n' + String(p.texto).trim();
+
+  const doc = documentoPartes(props);
+  doc.getBody().appendParagraph(linea);
+  doc.getBody().appendParagraph('');
+  doc.saveAndClose();
+
+  const r = lanzarRutina(
+    props,
+    'Parte nuevo desde la app Mi día FyQ (' + limpio(p.grupo) + ', ' + limpio(p.fecha) + ' ' + limpio(p.inicio) + '):\n' + String(p.texto).trim(),
+    ESPERA_ENTRE_PARTES_MS
+  );
+  return { ok: true, guardado: true, lanzado: r.ok && !r.repetido, motivo: r.ok ? (r.repetido ? 'repetido' : '') : r.error };
+}
+
+// El documento de partes vive en la carpeta de siempre. Se busca por título (por si alguien
+// lo recrea) y, si no existe, se crea con una cabecera que explica el formato.
+function documentoPartes(props) {
+  const carpeta = DriveApp.getFolderById(props.getProperty('CARPETA_ID'));
+  const it = carpeta.getFilesByName(TITULO_PARTES);
+  let masNuevo = null;
+  while (it.hasNext()) {
+    const f = it.next();
+    if (f.getMimeType() === MimeType.GOOGLE_DOCS && (!masNuevo || f.getLastUpdated() > masNuevo.getLastUpdated())) masNuevo = f;
+  }
+  if (masNuevo) return DocumentApp.openById(masNuevo.getId());
+
+  const doc = DocumentApp.create(TITULO_PARTES);
+  doc.getBody().appendParagraph(
+    'Partes de clase dictados desde la app Mi día FyQ. Cada parte empieza con: fecha · hora de la clase · grupo (código) · sesión · hora de envío. ' +
+    'Al pasar un parte al Registro FyQ 26-27, puedes borrarlo de aquí o dejarlo: la tarea solo usa los que aún no están en el registro.'
+  );
+  doc.getBody().appendParagraph('');
+  doc.saveAndClose();
+  DriveApp.getFileById(doc.getId()).moveTo(carpeta);
+  return DocumentApp.openById(doc.getId());
+}
+
 // Lanza ya la tarea de Claude que lee el registro y deja un JSON nuevo en la carpeta.
 function regenerar(props) {
+  return lanzarRutina(props, 'Pedido desde el botón «Pedir resumen nuevo» de la app Mi día FyQ.', ESPERA_ENTRE_PEDIDOS_MS);
+}
+
+function lanzarRutina(props, texto, esperaMinimaMs) {
   const token = props.getProperty('TOKEN_RUTINA');
   const rutina = props.getProperty('RUTINA_ID');
   if (!token || !rutina) {
@@ -73,7 +146,7 @@ function regenerar(props) {
   lock.waitLock(10000);
   try {
     const anterior = Number(props.getProperty('ULTIMO_PEDIDO') || 0);
-    if (Date.now() - anterior < ESPERA_ENTRE_PEDIDOS_MS) {
+    if (Date.now() - anterior < esperaMinimaMs) {
       return { ok: true, pedidoEn: new Date(anterior).toISOString(), repetido: true };
     }
 
@@ -81,7 +154,7 @@ function regenerar(props) {
       method: 'post',
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + token, 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ text: 'Pedido desde el botón «Pedir resumen nuevo» de la app Mi día FyQ.' }),
+      payload: JSON.stringify({ text: texto }),
       muteHttpExceptions: true,
     });
     const codigo = r.getResponseCode();

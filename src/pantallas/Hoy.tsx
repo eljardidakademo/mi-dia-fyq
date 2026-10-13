@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { Vista } from '../datos/vista';
+import { idParte, type EstadoParte } from '../datos/partes';
+import type { FranjaVista, Vista } from '../datos/vista';
 import { Alertas, Avisos, Corregir, Fechas, Preparar, RitmoGrupos, TarjetaFranja } from '../ui/componentes';
 import { fuentes, useTextos, type Colores } from '../ui/tema';
 
@@ -19,7 +20,14 @@ type Props = {
   pedirResumen: () => void;
   /** Mensaje breve tras pedir un resumen (bien o mal). */
   aviso: { ok: boolean; texto: string } | null;
+  /** Dictar el parte de una clase de hoy. */
+  abrirParte: (f: FranjaVista & { tipo: 'clase' }) => void;
+  estadosPartes: Record<string, EstadoParte>;
+  partesEnCola: number;
 };
+
+// El parte se ofrece en las clases que ya han empezado (o que ya tienen uno).
+const admiteParte = (f: FranjaVista, e?: EstadoParte) => f.tipo === 'clase' && (!!e || ['ahora', 'pasada', 'hecha'].includes(f.estado));
 
 const hhmm = (iso?: string | null) => {
   if (!iso) return null;
@@ -27,7 +35,22 @@ const hhmm = (iso?: string | null) => {
   return Number.isNaN(d.getTime()) ? null : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
-export function Hoy({ c, v, hechos, alternar, refrescando, refrescar, descargadoEn, abrirAjustes, pidiendo, pedirResumen, aviso }: Props) {
+export function Hoy({
+  c,
+  v,
+  hechos,
+  alternar,
+  refrescando,
+  refrescar,
+  descargadoEn,
+  abrirAjustes,
+  pidiendo,
+  pedirResumen,
+  aviso,
+  abrirParte,
+  estadosPartes,
+  partesEnCola,
+}: Props) {
   const t = useTextos();
   const generado = hhmm(v.generadoEn);
   const descargado = hhmm(descargadoEn);
@@ -64,13 +87,23 @@ export function Hoy({ c, v, hechos, alternar, refrescando, refrescar, descargado
       </Pressable>
       {pidiendo && <Text style={[s.pedirNota, { color: c.tinta2 }]}>{t.pidiendo}</Text>}
       {!pidiendo && aviso && <Text style={[s.pedirNota, { color: aviso.ok ? c.verde : c.rojo }]}>{aviso.texto}</Text>}
+      {partesEnCola > 0 && <Text style={[s.pedirNota, { color: c.ambar }]}>{t.partesEnCola(partesEnCola)}</Text>}
 
       <Alertas c={c} v={v} />
 
       {v.lectivo ? (
         <View style={{ gap: 10 }}>
           {v.franjas.map((f) => (
-            <TarjetaFranja key={`${f.inicio}-${f.tipo === 'clase' ? f.codigo : f.toca}`} c={c} f={f} hechos={hechos} alternar={alternar} />
+            <TarjetaFranja
+              key={`${f.inicio}-${f.tipo === 'clase' ? f.codigo : f.toca}`}
+              c={c}
+              f={f}
+              hechos={hechos}
+              alternar={alternar}
+              {...(f.tipo === 'clase' && admiteParte(f, estadosPartes[idParte(v.hoy, f.inicio, f.codigo)])
+                ? { abrirParte: () => abrirParte(f), estadoParte: estadosPartes[idParte(v.hoy, f.inicio, f.codigo)] }
+                : {})}
+            />
           ))}
         </View>
       ) : (
