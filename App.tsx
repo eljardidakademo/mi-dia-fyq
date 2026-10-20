@@ -4,7 +4,7 @@ import { JetBrainsMono_500Medium, JetBrainsMono_700Bold } from '@expo-google-fon
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppState, Platform, View } from 'react-native';
+import { AppState, BackHandler, Platform, View } from 'react-native';
 import { requestPinWidget } from 'react-native-android-widget';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -44,6 +44,8 @@ import { normalizar } from './src/datos/normalizar';
 import { construirVista, type FranjaVista } from './src/datos/vista';
 import { Ajustes } from './src/pantallas/Ajustes';
 import { Hoy } from './src/pantallas/Hoy';
+import { Semana } from './src/pantallas/Semana';
+import { construirSemana } from './src/datos/semana';
 import { DictarParte } from './src/ui/DictarParte';
 import { ProveedorIdioma, useColoresDe } from './src/ui/tema';
 import { NOMBRE_WIDGET } from './src/widget/WidgetHoy';
@@ -68,6 +70,7 @@ export default function App() {
   const [cargado, setCargado] = useState(false);
   const [ajustes, setAjustes] = useState<TAjustes | null>(null);
   const [verAjustes, setVerAjustes] = useState(false);
+  const [verSemana, setVerSemana] = useState(false);
   const [guardado, setGuardado] = useState<Guardado | null>(null);
   const [error, setError] = useState<ErrorDescarga | null>(null);
   const [pidiendo, setPidiendo] = useState(false);
@@ -224,6 +227,26 @@ export default function App() {
       }),
     [ahora, normalizado, error, prefs.idioma],
   );
+  // Botón «atrás» de Android: de Semana o Ajustes vuelve a Hoy en vez de cerrar la app.
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (verSemana) {
+        setVerSemana(false);
+        return true;
+      }
+      if (verAjustes && ajustes?.url) {
+        setVerAjustes(false);
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [verSemana, verAjustes, ajustes]);
+
+  const semana = useMemo(
+    () => construirSemana(docente, normalizado?.dia ?? null, ahora, prefs.idioma),
+    [ahora, normalizado, prefs.idioma],
+  );
 
   // Avisos y widget se rehacen con cada resumen nuevo y con cada cambio de preferencias.
   const pedirPermisoAviso = useRef(false);
@@ -286,6 +309,14 @@ export default function App() {
             estadoAvisos={textoEstadoAvisos}
             anadirWidget={Platform.OS === 'android' ? () => requestPinWidget({ widgetName: NOMBRE_WIDGET }) : undefined}
           />
+        ) : verSemana ? (
+          <Semana
+            c={c}
+            s={semana}
+            volver={() => setVerSemana(false)}
+            refrescando={refrescando}
+            refrescar={refrescar}
+          />
         ) : (
           <Hoy
             c={c}
@@ -296,6 +327,7 @@ export default function App() {
             refrescar={refrescar}
             descargadoEn={guardado?.descargadoEn ?? null}
             abrirAjustes={() => setVerAjustes(true)}
+            abrirSemana={() => setVerSemana(true)}
             pidiendo={pidiendo}
             pedirResumen={pedirResumen}
             aviso={avisoPedido}

@@ -36,6 +36,10 @@ export type FechaClave = {
   estado: 'fijado' | 'provisional' | 'por confirmar';
 };
 export type Ritmo = { grupo: string; codigo: string; desfase: number; texto: string };
+/** Sesión prevista en otro día de la semana (columna Previsto del registro). */
+export type SesionSemana = { fecha: string; codigo: string; sesion: string; previsto: string };
+/** Avance de la unidad en curso de un grupo: sesiones hechas de las que tiene. */
+export type Avance = { grupo: string; codigo: string; unidad: string; hechas: number; total: number };
 
 export type MiDia = {
   version: 1;
@@ -54,4 +58,7 @@ export type MiDia = {
   fechas: FechaClave[];
   ritmo: Ritmo[];
   avisos: string[];
+  /** Opcional (añadido el 20/10): lo previsto el resto de la semana y el avance por unidad. */
+  semana: SesionSemana[];
+  avance: Avance[];
 };

@@ -125,6 +125,17 @@ const es = {
   parteEnCola: (error: string) => `No se ha podido enviar: ${error} Queda guardado en el móvil y se reenviará solo.`,
   partesEnCola: (n: number) => (n === 1 ? '1 parte esperando para enviarse.' : `${n} partes esperando para enviarse.`),
 
+  // Semana
+  semana: 'Semana',
+  hoy: 'Hoy',
+  volverHoy: '← Hoy',
+  semanaDel: (fecha: string) => `Semana del ${fecha}`,
+  avanceUnidades: 'Avance de las unidades',
+  sesionesDe: (h: number, t: number) => `${h} de ${t} sesiones`,
+  sinAvance: 'El avance de cada unidad llegará con el próximo resumen.',
+  sinPrevisto: 'Lo previsto de cada clase llegará con el próximo resumen.',
+  hechaCorta: 'hecha',
+
   // Widget
   ahoraW: 'Ahora',
   siguienteW: 'Siguiente',
@@ -244,6 +255,16 @@ const va: Textos = {
   parteEnCola: (error) => `No s'ha pogut enviar: ${error} Queda guardat en el mòbil i es reenviarà sol.`,
   partesEnCola: (n) => (n === 1 ? '1 part esperant per a enviar-se.' : `${n} parts esperant per a enviar-se.`),
 
+  semana: 'Setmana',
+  hoy: 'Hui',
+  volverHoy: '← Hui',
+  semanaDel: (fecha) => `Setmana del ${fecha}`,
+  avanceUnidades: 'Avanç de les unitats',
+  sesionesDe: (h, t) => `${h} de ${t} sessions`,
+  sinAvance: "L'avanç de cada unitat arribarà amb el pròxim resum.",
+  sinPrevisto: 'El que està previst en cada classe arribarà amb el pròxim resum.',
+  hechaCorta: 'feta',
+
   ahoraW: 'Ara',
   siguienteW: 'Següent',
   sinMasClases: 'Hui no queden classes',
@@ -357,6 +378,16 @@ const en: Textos = {
   parteOkSinTarea: "Log saved to Drive. It'll be included in the next summary.",
   parteEnCola: (error) => `Couldn't send it: ${error} It's saved on the phone and will be resent automatically.`,
   partesEnCola: (n) => (n === 1 ? '1 log waiting to be sent.' : `${n} logs waiting to be sent.`),
+
+  semana: 'Week',
+  hoy: 'Today',
+  volverHoy: '← Today',
+  semanaDel: (fecha) => `Week of ${fecha}`,
+  avanceUnidades: 'Unit progress',
+  sesionesDe: (h, t) => `${h} of ${t} sessions`,
+  sinAvance: 'Progress for each unit will arrive with the next summary.',
+  sinPrevisto: "What's planned for each class will arrive with the next summary.",
+  hechaCorta: 'done',
 
   ahoraW: 'Now',
   siguienteW: 'Next',

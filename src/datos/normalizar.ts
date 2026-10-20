@@ -1,4 +1,4 @@
-import type { Corregir, FechaClave, Franja, MiDia, Preparar, Ritmo } from './tipos';
+import type { Avance, Corregir, FechaClave, Franja, MiDia, Preparar, Ritmo, SesionSemana } from './tipos';
 
 /**
  * Convierte lo que llega de la tarea en un MiDia utilizable. Es tolerante con las
@@ -98,6 +98,21 @@ export function normalizar(entrada: unknown): Normalizado {
     return { grupo: txt(r.grupo), codigo: txt(r.codigo), desfase: Number.isFinite(n) ? n : 0, texto: txt(r.texto) };
   });
 
+  const semana: SesionSemana[] = lista(entrada.semana)
+    .filter(esObj)
+    .map((x) => ({ fecha: txt(x.fecha), codigo: txt(x.codigo), sesion: txt(x.sesion), previsto: txt(x.previsto) }))
+    .filter((x) => ISO.test(x.fecha) && !!x.codigo);
+
+  const numero = (x: unknown) => {
+    const n = typeof x === 'number' ? x : parseFloat(txt(x).replace(',', '.'));
+    return Number.isFinite(n) ? n : 0;
+  };
+  const avance: Avance[] = lista(entrada.avance)
+    .filter(esObj)
+    .map((x) => ({ grupo: txt(x.grupo), codigo: txt(x.codigo), unidad: txt(x.unidad), hechas: numero(x.hechas), total: numero(x.total) }))
+    .filter((x) => !!x.codigo && x.total > 0)
+    .map((x) => ({ ...x, hechas: Math.min(Math.max(x.hechas, 0), x.total) }));
+
   const dia: MiDia = {
     version: 1,
     fecha,
@@ -115,6 +130,8 @@ export function normalizar(entrada: unknown): Normalizado {
     fechas,
     ritmo,
     avisos: listaTxt(entrada.avisos),
+    semana,
+    avance,
   };
   return { dia, problemas };
 }
