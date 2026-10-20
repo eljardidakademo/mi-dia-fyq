@@ -32,7 +32,9 @@ Usa solo lo que dicen el registro y los partes y no inventes contenido. Construy
  "preparar": [{"fecha":"AAAA-MM-DD","fechaTexto":"Martes 13/10","grupo","codigo","que"}] (columna Preparar de los próximos 3 días lectivos, sin contar hoy; sáltate festivos; un día sin nada que preparar no aparece),
  "fechas": [{"fecha":"AAAA-MM-DD","grupo","codigo","tipo":"examen"|"entrega","que","estado":"fijado"|"provisional"|"por confirmar"}] (próximos 21 días). Un examen y una entrega del mismo día son DOS entradas separadas, nunca una. Un examen "por acordar" usa como fecha el día en que se acuerda,
  "ritmo": [{"grupo","codigo","desfase": número de sesiones (negativo = retraso, positivo = adelanto, 0 = al día o sin dato; "3–4" se escribe 3.5),"texto"}] (un elemento por grupo, 6 en total),
- "avisos": [frases cortas de los avisos generales que afecten a hoy o a los próximos días; incluye datos [Por confirmar] relevantes]
+ "avisos": [frases cortas de los avisos generales que afecten a hoy o a los próximos días; incluye datos [Por confirmar] relevantes],
+ "semana": [{"fecha":"AAAA-MM-DD","codigo","sesion":"S14","previsto": columna Previsto}] (una entrada por sesión del registro con fecha de lunes a viernes de esta semana, sin contar hoy, incluidas las ya pasadas; los viernes añade también las de la semana siguiente; sin festivos),
+ "avance": [{"grupo","codigo","unidad","hechas","total"}] (unidad en curso de cada grupo: "total" = número de sesiones de esa unidad en su tabla del registro, "hechas" = las marcadas [HECHO] más las dadas según un parte; números, no texto; 6 en total)
 }
 Códigos de grupo: 1º Bach D → "1BD", 2º ESO C → "2C", 2º ESO E → "2E", 3º ESO E → "3E", 4º ESO B → "4B", Taller d'Aprofundiment 2º ESO → "Taller".
 Clase ya dada según un parte de hoy: "toca" empieza por "(ya hecho)", cada elemento de "material" lleva "(ya hecho)" y "nota" resume el parte.

@@ -15,6 +15,10 @@ Funciona sin conexión: lleva dentro el horario y el calendario del centro, y gu
 
 En las clases que ya han empezado aparece el botón **🎙 Parte**. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y los atrasados que aún no están en el registro salen como aviso. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
 
+## Vista semanal
+
+El botón **Semana** de la pantalla principal enseña de lunes a viernes las clases de cada día con lo previsto, los exámenes y entregas, el material y los eventos del centro, y debajo el avance de la unidad en curso de cada grupo en barras (color según el ritmo). Lo previsto y el avance vienen en los campos opcionales `semana` y `avance` del resumen; mientras no lleguen, la vista enseña solo el horario.
+
 ## Aviso de la mañana y widget
 
 - **Aviso**: en Ajustes se activa y se elige la hora (07:30 por defecto). Se programan los próximos días lectivos con la primera clase, el material que hay que llevar y lo urgente (correcciones, exámenes y entregas a 3 días o menos). Se rehacen cada vez que llega un resumen.
@@ -52,4 +56,4 @@ Estructura:
 - `src/i18n/`: textos de la app en cada idioma.
 - `src/avisos/`: contenido del aviso y del widget (`contenido.ts`) y programación de notificaciones.
 - `src/widget/`: widget de Android y su tarea en segundo plano.
-- `src/pantallas/`: Hoy y Ajustes.
+- `src/pantallas/`: Hoy, Semana y Ajustes.

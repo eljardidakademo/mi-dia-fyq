@@ -15,6 +15,7 @@ type Props = {
   /** Cuándo se descargó por última vez el resumen que se está viendo. */
   descargadoEn: string | null;
   abrirAjustes: () => void;
+  abrirSemana: () => void;
   /** Hay una petición de resumen nuevo en marcha. */
   pidiendo: boolean;
   pedirResumen: () => void;
@@ -44,6 +45,7 @@ export function Hoy({
   refrescar,
   descargadoEn,
   abrirAjustes,
+  abrirSemana,
   pidiendo,
   pedirResumen,
   aviso,
@@ -66,6 +68,9 @@ export function Hoy({
           <Text style={[s.fecha, { color: c.tinta }]}>{v.fechaTexto}</Text>
           {!!v.resumen && <Text style={[s.resumen, { color: c.tinta2 }]}>{v.resumen}</Text>}
         </View>
+        <Pressable onPress={abrirSemana} hitSlop={8} style={[s.semana, { borderColor: c.borde }]} accessibilityRole="button">
+          <Text style={[s.semanaTexto, { color: c.acento }]}>{t.semana}</Text>
+        </Pressable>
         <Pressable onPress={abrirAjustes} hitSlop={12} accessibilityLabel={t.ajustes}>
           <Text style={[s.engranaje, { color: c.tenue }]}>⚙</Text>
         </Pressable>
@@ -134,6 +139,8 @@ const s = StyleSheet.create({
   resumen: { fontFamily: fuentes.texto, fontSize: 16, lineHeight: 22, marginTop: 4 },
   meta: { fontFamily: fuentes.mono, fontSize: 11, marginTop: -6 },
   engranaje: { fontSize: 26 },
+  semana: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginTop: 2 },
+  semanaTexto: { fontFamily: fuentes.textoNegrita, fontSize: 14 },
   pedir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderRadius: 10, paddingVertical: 10 },
   pedirIcono: { fontSize: 18, lineHeight: 20 },
   pedirTexto: { fontFamily: fuentes.textoNegrita, fontSize: 15 },
