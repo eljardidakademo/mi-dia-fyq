@@ -16,8 +16,9 @@
  *  4. Copiar la URL /exec que termina en /exec. Esa es la dirección fija.
  *
  * Botón «Pedir resumen nuevo» de la app (opcional):
- *  5. En claude.ai/code/routines, abrir la tarea «Resumen diario de clases FyQ» > Editar >
- *     Añadir otro disparador > API. Guardar y pulsar «Generar token» (solo se ve una vez).
+ *  5. En claude.ai/code/routines (navegador), abrir la tarea «Resumen diario de clases FyQ» >
+ *     menú junto al nombre > Edit. En la fila Trigger pulsar + > API, y luego Generate token
+ *     (solo se ve una vez). No hace falta Save changes.
  *  6. Añadir dos propiedades del script más:
  *       TOKEN_RUTINA = el token que empieza por sk-ant-oat01-
  *       RUTINA_ID    = trig_019ZoDQqKosdyUb6aVv2DxKB (el id que aparece en la URL del disparador)
@@ -153,7 +154,11 @@ function lanzarRutina(props, texto, esperaMinimaMs) {
     const r = UrlFetchApp.fetch('https://api.anthropic.com/v1/claude_code/routines/' + encodeURIComponent(rutina) + '/fire', {
       method: 'post',
       contentType: 'application/json',
-      headers: { Authorization: 'Bearer ' + token, 'anthropic-version': '2023-06-01' },
+      headers: {
+        Authorization: 'Bearer ' + token,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'experimental-cc-routine-2026-04-01',
+      },
       payload: JSON.stringify({ text: texto }),
       muteHttpExceptions: true,
     });
