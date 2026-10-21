@@ -1,7 +1,7 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { idParte, type EstadoParte } from '../datos/partes';
-import type { FranjaVista, Vista } from '../datos/vista';
+import type { EstadoParte } from '../datos/partes';
+import type { Vista } from '../datos/vista';
 import { Alertas, Avisos, Corregir, Fechas, Preparar, RitmoGrupos, TarjetaFranja } from '../ui/componentes';
 import { fuentes, useTextos, type Colores } from '../ui/tema';
 
@@ -21,14 +21,11 @@ type Props = {
   pedirResumen: () => void;
   /** Mensaje breve tras pedir un resumen (bien o mal). */
   aviso: { ok: boolean; texto: string } | null;
-  /** Dictar el parte de una clase de hoy. */
-  abrirParte: (f: FranjaVista & { tipo: 'clase' }) => void;
-  estadosPartes: Record<string, EstadoParte>;
+  /** Dictar el parte del día (uno para todas las clases). */
+  abrirParte: () => void;
+  estadoParte?: EstadoParte;
   partesEnCola: number;
 };
-
-// El parte se ofrece en las clases que ya han empezado (o que ya tienen uno).
-const admiteParte = (f: FranjaVista, e?: EstadoParte) => f.tipo === 'clase' && (!!e || ['ahora', 'pasada', 'hecha'].includes(f.estado));
 
 const hhmm = (iso?: string | null) => {
   if (!iso) return null;
@@ -50,7 +47,7 @@ export function Hoy({
   pedirResumen,
   aviso,
   abrirParte,
-  estadosPartes,
+  estadoParte,
   partesEnCola,
 }: Props) {
   const t = useTextos();
@@ -68,9 +65,35 @@ export function Hoy({
           <Text style={[s.fecha, { color: c.tinta }]}>{v.fechaTexto}</Text>
           {!!v.resumen && <Text style={[s.resumen, { color: c.tinta2 }]}>{v.resumen}</Text>}
         </View>
-        <Pressable onPress={abrirSemana} hitSlop={8} style={[s.semana, { borderColor: c.borde }]} accessibilityRole="button">
-          <Text style={[s.semanaTexto, { color: c.acento }]}>{t.semana}</Text>
-        </Pressable>
+        <View style={s.botones}>
+          <Pressable onPress={abrirSemana} hitSlop={8} style={[s.semana, { borderColor: c.borde }]} accessibilityRole="button">
+            <Text style={[s.semanaTexto, { color: c.acento }]}>{t.semana}</Text>
+          </Pressable>
+          {v.lectivo && (
+            <Pressable
+              onPress={abrirParte}
+              hitSlop={8}
+              style={[
+                s.semana,
+                estadoParte?.estado === 'enviado'
+                  ? { borderColor: c.verde, backgroundColor: c.verdeSuave }
+                  : estadoParte?.estado === 'pendiente'
+                    ? { borderColor: c.ambar, backgroundColor: c.ambarSuave }
+                    : { borderColor: c.borde },
+              ]}
+              accessibilityRole="button"
+            >
+              <Text
+                style={[
+                  s.semanaTexto,
+                  { color: estadoParte?.estado === 'enviado' ? c.verde : estadoParte?.estado === 'pendiente' ? c.ambar : c.acento },
+                ]}
+              >
+                {estadoParte?.estado === 'enviado' ? `✓ ${t.parte}` : estadoParte?.estado === 'pendiente' ? `⏳ ${t.parte}` : `🎙 ${t.parte}`}
+              </Text>
+            </Pressable>
+          )}
+        </View>
         <Pressable onPress={abrirAjustes} hitSlop={12} accessibilityLabel={t.ajustes}>
           <Text style={[s.engranaje, { color: c.tenue }]}>⚙</Text>
         </Pressable>
@@ -105,9 +128,6 @@ export function Hoy({
               f={f}
               hechos={hechos}
               alternar={alternar}
-              {...(f.tipo === 'clase' && admiteParte(f, estadosPartes[idParte(v.hoy, f.inicio, f.codigo)])
-                ? { abrirParte: () => abrirParte(f), estadoParte: estadosPartes[idParte(v.hoy, f.inicio, f.codigo)] }
-                : {})}
             />
           ))}
         </View>
@@ -139,6 +159,7 @@ const s = StyleSheet.create({
   resumen: { fontFamily: fuentes.texto, fontSize: 16, lineHeight: 22, marginTop: 4 },
   meta: { fontFamily: fuentes.mono, fontSize: 11, marginTop: -6 },
   engranaje: { fontSize: 26 },
+  botones: { gap: 6, alignItems: 'flex-end' },
   semana: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, marginTop: 2 },
   semanaTexto: { fontFamily: fuentes.textoNegrita, fontSize: 14 },
   pedir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1.5, borderRadius: 10, paddingVertical: 10 },

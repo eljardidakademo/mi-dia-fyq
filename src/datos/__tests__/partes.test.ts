@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { enviarCola, idParte, leerCola, leerEstadosPartes, mandarOEncolar, type Parte } from '../partes';
+import { enviarCola, idParte, idParteDia, leerCola, leerEstadosPartes, mandarOEncolar, PARTE_DIA, type Parte } from '../partes';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -66,4 +66,11 @@ test('script antiguo o clave mal: se avisa y el parte no se pierde', async () =>
   const clave = jest.fn().mockResolvedValue(json({ ok: false, error: 'clave' })) as unknown as typeof fetch;
   expect(await mandarOEncolar(aj, parte(), clave)).toMatchObject({ ok: false, error: { codigo: 'clave' } });
   expect(await leerCola()).toHaveLength(1);
+});
+
+describe('parte del día', () => {
+  it('tiene un solo id por fecha', () => {
+    expect(idParteDia('2026-10-21')).toBe(idParte('2026-10-21', PARTE_DIA.inicio, PARTE_DIA.codigo));
+    expect(idParteDia('2026-10-21')).not.toBe(idParteDia('2026-10-22'));
+  });
 });

@@ -56,6 +56,8 @@ const es = {
   pedirResumen: 'Pedir resumen nuevo',
   pidiendo: 'Pidiendo a Claude un resumen nuevo con lo que hay ahora en el registro. Suele tardar unos 2 minutos.',
   resumenNuevoListo: 'Resumen nuevo descargado.',
+  resumenSinCambios: (estadoA: string) =>
+    `Resumen nuevo descargado, pero sin cambios: el registro sigue a ${estadoA} y no hay partes nuevos. Dicta el parte del día para que se actualice.`,
 
   // Componentes
   estado: { ahora: 'Ahora', siguiente: 'Siguiente', hecha: 'Hecha' },
@@ -115,8 +117,8 @@ const es = {
   parte: 'Parte',
   parteEnviado: 'Parte enviado',
   partePendiente: 'Parte sin enviar',
-  parteTitulo: (grupo: string, hora: string) => `Parte de ${grupo} · ${hora}`,
-  parteAyuda: 'Pulsa el micrófono del teclado y cuenta qué has hecho, qué ha quedado pendiente y cualquier incidencia.',
+  parteTitulo: (fecha: string) => `Parte del día · ${fecha}`,
+  parteAyuda: 'Pulsa el micrófono del teclado y cuenta, clase por clase (di el grupo), qué has hecho, qué ha quedado pendiente y cualquier incidencia.',
   partePlaceholder: 'Hoy hemos…',
   enviar: 'Enviar',
   cancelar: 'Cancelar',
@@ -190,6 +192,8 @@ const va: Textos = {
   pedirResumen: 'Demanar resum nou',
   pidiendo: 'Demanant a Claude un resum nou amb el que hi ha ara en el registre. Sol tardar uns 2 minuts.',
   resumenNuevoListo: 'Resum nou descarregat.',
+  resumenSinCambios: (estadoA) =>
+    `Resum nou descarregat, però sense canvis: el registre continua a ${estadoA} i no hi ha parts nous. Dicta el part del dia perquè s'actualitze.`,
 
   estado: { ahora: 'Ara', siguiente: 'Següent', hecha: 'Feta' },
   revisarDeberes: 'Revisar deures',
@@ -245,8 +249,8 @@ const va: Textos = {
   parte: 'Part',
   parteEnviado: 'Part enviat',
   partePendiente: 'Part sense enviar',
-  parteTitulo: (grupo, hora) => `Part de ${grupo} · ${hora}`,
-  parteAyuda: "Prem el micròfon del teclat i conta què has fet, què ha quedat pendent i qualsevol incidència.",
+  parteTitulo: (fecha) => `Part del dia · ${fecha}`,
+  parteAyuda: "Prem el micròfon del teclat i conta, classe per classe (digues el grup), què has fet, què ha quedat pendent i qualsevol incidència.",
   partePlaceholder: 'Hui hem…',
   enviar: 'Enviar',
   cancelar: 'Cancel·lar',
@@ -315,6 +319,8 @@ const en: Textos = {
   pedirResumen: 'Request new summary',
   pidiendo: "Asking Claude for a new summary with what's in the log right now. It usually takes about 2 minutes.",
   resumenNuevoListo: 'New summary downloaded.',
+  resumenSinCambios: (estadoA) =>
+    `New summary downloaded, but nothing changed: the log is still as of ${estadoA} and there are no new logs. Dictate the day log to update it.`,
 
   estado: { ahora: 'Now', siguiente: 'Next', hecha: 'Done' },
   revisarDeberes: 'Check homework',
@@ -369,8 +375,8 @@ const en: Textos = {
   parte: 'Log',
   parteEnviado: 'Log sent',
   partePendiente: 'Log not sent',
-  parteTitulo: (grupo, hora) => `Class log · ${grupo} · ${hora}`,
-  parteAyuda: "Tap the keyboard's microphone and say what you did, what's still pending and anything that happened.",
+  parteTitulo: (fecha) => `Day log · ${fecha}`,
+  parteAyuda: "Tap the keyboard's microphone and go class by class (say the group): what you did, what's still pending and anything that happened.",
   partePlaceholder: 'Today we…',
   enviar: 'Send',
   cancelar: 'Cancel',

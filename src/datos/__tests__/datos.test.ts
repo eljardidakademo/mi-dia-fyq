@@ -1,7 +1,7 @@
 import docenteJson from '../../config/docente.json';
 import type { Docente } from '../../config/tipos';
 import { estadoDia, fechaCorta, fechaLarga, franjasDelHorario, proximoLectivo } from '../calendario';
-import { descargar, esperarResumenNuevo, pedirResumenNuevo, textoError } from '../fuente';
+import { descargar, esperarResumenNuevo, mismoContenido, pedirResumenNuevo, textoError } from '../fuente';
 import { fechaDesdeTexto, normalizar } from '../normalizar';
 import { construirVista } from '../vista';
 import ejemplo from './fixtures/ejemplo_2026-10-08.json';
@@ -182,5 +182,16 @@ describe('pedir resumen nuevo', () => {
   test('si no llega a tiempo lo dice', async () => {
     const f = jest.fn().mockResolvedValue(json({ ok: true, archivo: 'a.json', datos: ejemplo })) as unknown as typeof fetch;
     expect(await esperarResumenNuevo(aj, 'a.json', { cadaMs: 1, maxMs: 20, fetchFn: f })).toEqual({ ok: false, error: { codigo: 'tarda' } });
+  });
+});
+
+describe('mismoContenido', () => {
+  it('no cuenta la hora de generación', () => {
+    const a = { ...ejemplo, generadoEn: '2026-10-08T07:46:00+02:00' };
+    const b = { ...ejemplo, generadoEn: '2026-10-08T08:27:00+02:00' };
+    expect(mismoContenido(a, b)).toBe(true);
+  });
+  it('detecta cualquier otro cambio', () => {
+    expect(mismoContenido(ejemplo, { ...ejemplo, resumen: 'otra cosa' })).toBe(false);
   });
 });
