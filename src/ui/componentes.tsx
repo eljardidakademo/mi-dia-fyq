@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import docenteJson from '../config/docente.json';
 import { mesCorto, desdeIso } from '../datos/calendario';
 import { MARCA_HECHO, quitarMarcaHecho } from '../datos/normalizar';
-import type { EstadoParte } from '../datos/partes';
 import type { FranjaVista, Vista } from '../datos/vista';
 import { colorGrupo, colorRitmo, fuentes, useIdioma, useTextos, type Colores } from './tema';
 
@@ -55,15 +54,10 @@ export function TarjetaFranja({
   f,
   hechos,
   alternar,
-  abrirParte,
-  estadoParte,
 }: ConC & {
   f: FranjaVista;
   hechos: Set<string>;
   alternar: (id: string) => void;
-  /** Abre el dictado del parte de esta clase. */
-  abrirParte?: () => void;
-  estadoParte?: EstadoParte;
 }) {
   const t = useTextos();
   const apagada = f.estado === 'pasada' || f.estado === 'hecha';
@@ -137,34 +131,6 @@ export function TarjetaFranja({
           </Bloque>
         )}
         {!!f.nota && <Text style={[s.nota, { color: c.tinta2, borderColor: c.borde }]}>{f.nota}</Text>}
-        {abrirParte && (
-          <Pressable
-            onPress={abrirParte}
-            style={[
-              s.parte,
-              estadoParte?.estado === 'enviado'
-                ? { borderColor: c.verde, backgroundColor: c.verdeSuave }
-                : estadoParte?.estado === 'pendiente'
-                  ? { borderColor: c.ambar, backgroundColor: c.ambarSuave }
-                  : { borderColor: c.borde },
-            ]}
-            hitSlop={4}
-            accessibilityRole="button"
-          >
-            <Text
-              style={[
-                s.parteTexto,
-                { color: estadoParte?.estado === 'enviado' ? c.verde : estadoParte?.estado === 'pendiente' ? c.ambar : c.acento },
-              ]}
-            >
-              {estadoParte?.estado === 'enviado'
-                ? `✓ ${t.parteEnviado}`
-                : estadoParte?.estado === 'pendiente'
-                  ? `⏳ ${t.partePendiente}`
-                  : `🎙 ${t.parte}`}
-            </Text>
-          </Pressable>
-        )}
       </View>
     </View>
   );
@@ -359,6 +325,4 @@ const s = StyleSheet.create({
   barra: { position: 'absolute', top: 2, bottom: 2, borderRadius: 3 },
   ritmoNum: { fontFamily: fuentes.monoNegrita, fontSize: 13, width: 36, textAlign: 'right' },
   alerta: { borderLeftWidth: 4, borderRadius: 8, padding: 12 },
-  parte: { alignSelf: 'flex-start', borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  parteTexto: { fontFamily: fuentes.textoNegrita, fontSize: 14 },
 });

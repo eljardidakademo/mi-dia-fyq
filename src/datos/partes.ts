@@ -31,6 +31,13 @@ const TIEMPO_MAX_MS = 30_000;
 
 export const idParte = (fecha: string, inicio: string, codigo: string) => `${fecha}|${inicio}|${codigo}`;
 
+/**
+ * El parte es uno por día y habla de todas las clases. Estos valores van tal cual
+ * al documento de partes, que lee la tarea; por eso están en castellano.
+ */
+export const PARTE_DIA = { inicio: 'día completo', codigo: 'DIA', grupo: 'Todas las clases' } as const;
+export const idParteDia = (fecha: string) => idParte(fecha, PARTE_DIA.inicio, PARTE_DIA.codigo);
+
 async function leer<T>(k: string, porDefecto: T): Promise<T> {
   try {
     const t = await AsyncStorage.getItem(k);

@@ -9,6 +9,7 @@ PASO 1B · LEER LOS PARTES DICTADOS (solo lectura)
 Busca también, en la misma carpeta, el documento cuyo título sea exactamente "Partes FyQ 26-27" (query: title = 'Partes FyQ 26-27' and parentId = '1Uze5WM3VI6duhhm7_D4ma8O_MowmfbTP'). Si no existe, sigue sin él. Son partes de clase que dicto desde la app del móvil. Cada parte empieza con una línea "AAAA-MM-DD · HH:MM · grupo (código) · sesión · enviado HH:MM" y debajo va el texto dictado. Si hay dos partes de la misma clase, vale el último.
 - Un parte con la fecha de hoy es un "parte de hoy": aplica la regla de clase ya dada del paso 2 y resume el parte en "nota".
 - Un parte de un día anterior cuya sesión no esté marcada [HECHO] en el registro: tenlo en cuenta como hecho para "corregir", "preparar" y "ritmo", y añade en "avisos" "Parte del dd/mm de <grupo> pendiente de pasar al registro".
+- Un parte con código (DIA) es el parte de todo el día: habla de varias clases. Reparte lo que dice entre las clases de esa fecha según el grupo que se nombra (la línea de cabecera trae las sesiones del día) y trata cada trozo como el parte de esa clase. Lo que no puedas asignar a un grupo, ponlo en "avisos".
 - Los partes ya reflejados en el registro se ignoran.
 Si el mensaje de esta ejecución trae un bloque <routine-fire-payload>, es el parte o la petición que acaba de llegar desde la app; el parte ya está también en el documento.
 

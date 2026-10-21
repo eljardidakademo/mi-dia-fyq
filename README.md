@@ -13,7 +13,7 @@ Funciona sin conexión: lleva dentro el horario y el calendario del centro, y gu
 
 ## Partes de clase por voz
 
-En las clases que ya han empezado aparece el botón **🎙 Parte**. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y los atrasados que aún no están en el registro salen como aviso. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
+En la cabecera de Hoy, junto a «Semana», está el botón **🎙 Parte**: un parte para todo el día, en el que se cuenta clase por clase (diciendo el grupo) qué se ha hecho. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y los atrasados que aún no están en el registro salen como aviso. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
 
 ## Vista semanal
 

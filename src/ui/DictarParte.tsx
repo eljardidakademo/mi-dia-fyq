@@ -5,8 +5,8 @@ import { fuentes, useTextos, type Colores } from './tema';
 
 type Props = {
   c: Colores;
-  /** Clase del parte; null cierra la hoja. */
-  clase: { grupo: string; inicio: string } | null;
+  abierto: boolean;
+  titulo: string;
   enviando: boolean;
   /** Resultado del último envío, para enseñarlo antes de cerrar. */
   resultado: { ok: boolean; texto: string } | null;
@@ -15,22 +15,22 @@ type Props = {
 };
 
 /**
- * Hoja para dictar el parte de una clase. El dictado lo hace el micrófono del
+ * Hoja para dictar el parte del día, con todas las clases. El dictado lo hace el micrófono del
  * teclado de Android (o iPhone), así no hace falta ningún permiso ni conexión para escribirlo.
  */
-export function DictarParte({ c, clase, enviando, resultado, enviar, cerrar }: Props) {
+export function DictarParte({ c, abierto, titulo, enviando, resultado, enviar, cerrar }: Props) {
   const t = useTextos();
   const [texto, setTexto] = useState('');
   useEffect(() => {
-    if (clase) setTexto('');
-  }, [clase]);
+    if (abierto) setTexto('');
+  }, [abierto]);
 
   return (
-    <Modal visible={!!clase} transparent animationType="slide" onRequestClose={cerrar}>
+    <Modal visible={abierto} transparent animationType="slide" onRequestClose={cerrar}>
       <KeyboardAvoidingView style={s.fondo} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Pressable style={s.cerrarZona} onPress={cerrar} />
         <View style={[s.hoja, { backgroundColor: c.superficie, borderColor: c.borde }]}>
-          <Text style={[s.titulo, { color: c.tinta }]}>{clase ? t.parteTitulo(clase.grupo, clase.inicio) : ''}</Text>
+          <Text style={[s.titulo, { color: c.tinta }]}>{titulo}</Text>
           <Text style={[s.ayuda, { color: c.tinta2 }]}>{t.parteAyuda}</Text>
           <TextInput
             style={[s.campo, { color: c.tinta, borderColor: c.borde, backgroundColor: c.superficie2 }]}

@@ -11,13 +11,14 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { programarAvisos, type ResultadoAvisos } from './src/avisos/programar';
 import docenteJson from './src/config/docente.json';
 import type { Docente } from './src/config/tipos';
-import { isoLocal } from './src/datos/calendario';
+import { fechaCorta, isoLocal } from './src/datos/calendario';
 import {
   enviarCola,
-  idParte,
+  idParteDia,
   leerCola,
   leerEstadosPartes,
   mandarOEncolar,
+  PARTE_DIA,
   type EstadoParte,
   type Parte,
 } from './src/datos/partes';
@@ -31,6 +32,7 @@ import {
   leerGuardado,
   leerHechos,
   leerPreferencias,
+  mismoContenido,
   pedirResumenNuevo,
   PREFERENCIAS_INICIALES,
   textoError,
@@ -41,7 +43,7 @@ import {
 } from './src/datos/fuente';
 import { textos } from './src/i18n/textos';
 import { normalizar } from './src/datos/normalizar';
-import { construirVista, type FranjaVista } from './src/datos/vista';
+import { construirVista, type Vista } from './src/datos/vista';
 import { Ajustes } from './src/pantallas/Ajustes';
 import { Hoy } from './src/pantallas/Hoy';
 import { Semana } from './src/pantallas/Semana';
@@ -119,13 +121,15 @@ export default function App() {
   // Pide a la tarea de Claude un resumen nuevo y espera a que llegue.
   // Espera a que la tarea deje un resumen distinto de `previo` y lo enseña.
   const esperarNuevo = useCallback(
-    async (a: TAjustes, previo: string) => {
+    async (a: TAjustes, previo: Guardado | null) => {
       setPidiendo(true);
-      const r = await esperarResumenNuevo(a, previo);
+      const r = await esperarResumenNuevo(a, previo?.archivo ?? '');
       if (r.ok) {
         setGuardado(r.guardado);
         setError(null);
-        setAvisoPedido({ ok: true, texto: t.resumenNuevoListo });
+        const estadoA = normalizar(r.guardado.datos).dia?.registroEstadoA;
+        const igual = !!previo && mismoContenido(previo.datos, r.guardado.datos);
+        setAvisoPedido({ ok: true, texto: igual && estadoA ? t.resumenSinCambios(estadoA) : t.resumenNuevoListo });
       } else {
         setAvisoPedido({ ok: false, texto: textoError(r.error, prefs.idioma) });
       }
@@ -141,7 +145,7 @@ export default function App() {
     if (!ajustes?.url || pidiendo) return;
     setPidiendo(true);
     setAvisoPedido(null);
-    const previo = guardado?.archivo ?? '';
+    const previo = guardado;
     const p = await pedirResumenNuevo(ajustes);
     if (!p.ok) {
       setAvisoPedido({ ok: false, texto: textoError(p.error, prefs.idioma) });
@@ -152,7 +156,9 @@ export default function App() {
   }, [ajustes, pidiendo, guardado, prefs.idioma, esperarNuevo]);
 
   // Partes de clase dictados: estado por clase de hoy y los que esperan conexión.
-  const [parteDe, setParteDe] = useState<(FranjaVista & { tipo: 'clase' }) | null>(null);
+  const [parteAbierto, setParteAbierto] = useState(false);
+  // Las sesiones de hoy van con el parte para que la tarea sepa de qué clases habla.
+  const vistaRef = useRef<Vista | null>(null);
   const [enviandoParte, setEnviandoParte] = useState(false);
   const [resultadoParte, setResultadoParte] = useState<{ ok: boolean; texto: string } | null>(null);
   const [estadosPartes, setEstadosPartes] = useState<Record<string, EstadoParte>>({});
@@ -169,19 +175,20 @@ export default function App() {
 
   const enviarParteDictado = useCallback(
     async (texto: string) => {
-      if (!parteDe || !ajustes) return;
+      if (!ajustes) return;
       setEnviandoParte(true);
+      const sesiones = (vistaRef.current?.franjas ?? [])
+        .flatMap((f) => (f.tipo === 'clase' ? [`${f.inicio} ${f.codigo}${f.sesion ? ' ' + f.sesion : ''}`] : []))
+        .join(', ');
       const parte: Parte = {
-        id: idParte(hoy, parteDe.inicio, parteDe.codigo),
+        id: idParteDia(hoy),
         fecha: hoy,
-        inicio: parteDe.inicio,
-        codigo: parteDe.codigo,
-        grupo: parteDe.grupo,
-        sesion: parteDe.sesion,
+        ...PARTE_DIA,
+        sesion: sesiones,
         texto,
         creadoEn: new Date().toISOString(),
       };
-      const previo = guardado?.archivo ?? '';
+      const previo = guardado;
       const r = await mandarOEncolar(ajustes, parte);
       await leerPartes();
       setEnviandoParte(false);
@@ -189,12 +196,12 @@ export default function App() {
         setResultadoParte({ ok: false, texto: t.parteEnCola(textoError(r.error, prefs.idioma)) });
         return;
       }
-      setParteDe(null);
+      setParteAbierto(false);
       setResultadoParte(null);
       setAvisoPedido({ ok: true, texto: r.lanzado ? t.parteOk : t.parteOkSinTarea });
       if (r.lanzado && !pidiendo) await esperarNuevo(ajustes, previo);
     },
-    [parteDe, ajustes, hoy, guardado, leerPartes, t, prefs.idioma, pidiendo, esperarNuevo],
+    [ajustes, hoy, guardado, leerPartes, t, prefs.idioma, pidiendo, esperarNuevo],
   );
 
   // Al abrir y al volver a la app: actualiza si hace más de 5 minutos del último intento.
@@ -227,6 +234,7 @@ export default function App() {
       }),
     [ahora, normalizado, error, prefs.idioma],
   );
+  vistaRef.current = vista;
   // Botón «atrás» de Android: de Semana o Ajustes vuelve a Hoy en vez de cerrar la app.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -331,21 +339,22 @@ export default function App() {
             pidiendo={pidiendo}
             pedirResumen={pedirResumen}
             aviso={avisoPedido}
-            abrirParte={(f) => {
+            abrirParte={() => {
               setResultadoParte(null);
-              setParteDe(f);
+              setParteAbierto(true);
             }}
-            estadosPartes={estadosPartes}
+            estadoParte={estadosPartes[idParteDia(hoy)]}
             partesEnCola={partesEnCola}
           />
         )}
         <DictarParte
           c={c}
-          clase={parteDe}
+          abierto={parteAbierto}
+          titulo={t.parteTitulo(fechaCorta(hoy, prefs.idioma))}
           enviando={enviandoParte}
           resultado={resultadoParte}
           enviar={enviarParteDictado}
-          cerrar={() => setParteDe(null)}
+          cerrar={() => setParteAbierto(false)}
         />
       </SafeAreaView>
     </SafeAreaProvider>

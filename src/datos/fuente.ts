@@ -169,6 +169,19 @@ export async function esperarResumenNuevo(
   return { ok: false, error: { codigo: 'tarda' } };
 }
 
+/**
+ * ¿Dos resúmenes dicen lo mismo? Sin contar la hora en que se generaron: así la app
+ * puede avisar de que la tarea ha corrido pero el registro no tenía nada nuevo.
+ */
+export function mismoContenido(a: unknown, b: unknown): boolean {
+  const sinHora = (x: unknown) => {
+    if (!x || typeof x !== 'object') return JSON.stringify(x);
+    const { generadoEn: _g, ...resto } = x as Record<string, unknown>;
+    return JSON.stringify(resto);
+  };
+  return sinHora(a) === sinHora(b);
+}
+
 /** Descarga y, si sale bien, sustituye la copia guardada. */
 export async function actualizar(a: Ajustes): Promise<ResultadoDescarga> {
   const r = await descargar(a);
