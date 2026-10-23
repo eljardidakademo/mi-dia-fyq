@@ -44,8 +44,10 @@ export const guardarPreferencias = (p: Preferencias) => AsyncStorage.setItem(K_P
 
 /** Qué falló al hablar con el script. Se traduce al pintarlo, así sigue el idioma elegido. */
 export type ErrorDescarga =
-  | { codigo: 'sin_url' | 'sin_red' | 'no_json' | 'clave' | 'sin_archivos' | 'json_invalido' | 'sin_token' | 'version_vieja' | 'tarda' }
+  | { codigo: 'sin_url' | 'sin_red' | 'clave' | 'sin_archivos' | 'json_invalido' | 'sin_token' | 'version_vieja' | 'tarda' }
   | { codigo: 'http'; status: number }
+  /** `detalle`: lo que dice la página que devolvió Google en lugar del JSON, si se lee algo. */
+  | { codigo: 'no_json'; detalle?: string }
   | { codigo: 'ilegible' | 'script' | 'rutina'; detalle: string };
 
 export function textoError(e: ErrorDescarga, idioma: Idioma = 'es'): string {
@@ -53,6 +55,8 @@ export function textoError(e: ErrorDescarga, idioma: Idioma = 'es'): string {
   switch (e.codigo) {
     case 'http':
       return t.http(e.status);
+    case 'no_json':
+      return t.no_json(e.detalle);
     case 'ilegible':
     case 'script':
     case 'rutina':
@@ -106,7 +110,7 @@ async function llamarScript(
   try {
     resp = JSON.parse(cuerpo);
   } catch {
-    return { ok: false, error: { codigo: 'no_json' } };
+    return { ok: false, error: { codigo: 'no_json', detalle: textoDePagina(cuerpo) } };
   }
   if (!resp.ok) {
     const conocido = ERRORES_SCRIPT.find((c) => c === resp.error);
@@ -115,6 +119,20 @@ async function llamarScript(
     return { ok: false, error: { codigo: 'script', detalle: resp.detalle ?? resp.error ?? '?' } };
   }
   return { ok: true, resp };
+}
+
+/** El texto visible de una página HTML de error de Google, recortado. */
+export function textoDePagina(html: string): string | undefined {
+  const texto = html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return texto ? texto.slice(0, 200) : undefined;
 }
 
 /** Pide el resumen al script. No toca la caché: eso lo hace `actualizar`. */

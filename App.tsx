@@ -157,6 +157,8 @@ export default function App() {
 
   // Partes de clase dictados: estado por clase de hoy y los que esperan conexión.
   const [parteAbierto, setParteAbierto] = useState(false);
+  // Avisos quitados a mano: vuelven al abrir de nuevo la app o si cambia su texto.
+  const [alertasOcultas, setAlertasOcultas] = useState<Set<string>>(new Set());
   // Las sesiones de hoy van con el parte para que la tarea sepa de qué clases habla.
   const vistaRef = useRef<Vista | null>(null);
   const [enviandoParte, setEnviandoParte] = useState(false);
@@ -345,6 +347,8 @@ export default function App() {
             }}
             estadoParte={estadosPartes[idParteDia(hoy)]}
             partesEnCola={partesEnCola}
+            alertasOcultas={alertasOcultas}
+            ocultarAlerta={(texto) => setAlertasOcultas((s) => new Set(s).add(texto))}
           />
         )}
         <DictarParte
