@@ -135,7 +135,7 @@
     },
     "fechas": {
       "type": "array",
-      "description": "Exámenes y entregas de los próximos 21 días. Un examen y una entrega del mismo día son dos entradas.",
+      "description": "Exámenes y entregas desde el día 1 del mes en curso hasta final de trimestre (la app enseña en Hoy los de los próximos 21 días y el resto en el calendario del mes). Un examen y una entrega del mismo día son dos entradas.",
       "items": {
         "type": "object",
         "required": [
@@ -272,6 +272,35 @@
           "total": {
             "type": "number",
             "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "registrar": {
+      "description": "Opcional (añadido el 23/10). Sesiones dadas según un parte que el registro aún no marca [HECHO]. El script de Google las apunta en el registro la primera vez que sirve este resumen.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "codigo",
+          "sesion",
+          "fecha",
+          "hecho"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "codigo": {
+            "$ref": "#/$defs/codigo"
+          },
+          "sesion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fecha": {
+            "$ref": "#/$defs/fechaISO"
+          },
+          "hecho": {
+            "type": "string"
           }
         }
       }

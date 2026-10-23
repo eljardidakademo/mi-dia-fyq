@@ -13,11 +13,17 @@ Funciona sin conexión: lleva dentro el horario y el calendario del centro, y gu
 
 ## Partes de clase por voz
 
-En la cabecera de Hoy, junto a «Semana», está el botón **🎙 Parte**: un parte para todo el día, en el que se cuenta clase por clase (diciendo el grupo) qué se ha hecho. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y los atrasados que aún no están en el registro salen como aviso. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
+En la cabecera de Hoy, junto a «Semana», está el botón **🎙 Parte**: un parte para todo el día, en el que se cuenta clase por clase (diciendo el grupo) qué se ha hecho. Se dicta con el micrófono del teclado y se envía al script de Google, que lo apunta en el documento «Partes FyQ 26-27» (en la misma carpeta; se crea solo) y lanza la tarea. La tarea lee esos partes: los de hoy marcan la clase como hecha y, con los que aún no están en el registro, rellena el campo `registrar` del resumen. Sin conexión, el parte se guarda en el móvil y se reenvía solo al actualizar.
+
+**Registro automático.** La primera vez que el script sirve un resumen con `registrar`, apunta esas sesiones en el «Registro FyQ 26-27»: `[HECHO dd/mm]` al principio de la columna Previsto (más « · Parte: …»), «Estado a» con la fecha más reciente y una fila en la tabla «Registro de partes». Cada resumen se aplica una vez (propiedad `APLICADO`) y una sesión ya marcada no se toca. Se desactiva con la propiedad `REGISTRO_AUTO = no`. La app avisa de qué sesiones se han apuntado.
+
+**Recordatorio del parte.** Diez minutos después de la última clase de cada día lectivo llega una notificación si aún no se ha mandado el parte; al tocarla se abre el dictado. Se activa o quita en Ajustes (activado por defecto).
 
 ## Vista semanal
 
 El botón **Semana** de la pantalla principal enseña de lunes a viernes las clases de cada día con lo previsto, los exámenes y entregas, el material y los eventos del centro, y debajo el avance de la unidad en curso de cada grupo en barras (color según el ritmo). Lo previsto y el avance vienen en los campos opcionales `semana` y `avance` del resumen; mientras no lleguen, la vista enseña solo el horario.
+
+La pestaña **Mes** enseña el calendario de lunes a viernes con un punto rojo los días de examen y azul los de entrega, con flechas para cambiar de mes y la lista debajo. La tarea manda en `fechas` todo lo que hay desde el día 1 del mes hasta final de trimestre; en Hoy solo salen los de los próximos 21 días.
 
 ## Aviso de la mañana y widget
 

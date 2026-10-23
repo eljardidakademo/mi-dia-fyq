@@ -111,3 +111,25 @@ export function datosWidget(docente: Docente, dia: MiDia | null, ahora: Date, ho
     urgente,
   };
 }
+
+/** Minutos que se deja pasar tras la última clase antes de recordar el parte. */
+export const MARGEN_PARTE_MIN = 10;
+
+/**
+ * Hora del recordatorio del parte para `fecha`: el final de la última clase
+ * (sin contar grupos que ese día no la tienen) más un margen. Null si no hay clases.
+ */
+export function horaRecordatorioParte(docente: Docente, fecha: string): string | null {
+  const estado = estadoDia(docente, fecha);
+  if (!estado.lectivo) return null;
+  const fines = franjasDelHorario(docente, fecha)
+    .filter((f) => f.tipo === 'clase' && !estado.gruposSinClase.some((g) => g.codigo === f.codigo))
+    .map((f) => f.fin)
+    .sort();
+  const ultima = fines[fines.length - 1];
+  if (!ultima) return null;
+  const [h, m] = ultima.split(':').map(Number);
+  const total = h * 60 + m + MARGEN_PARTE_MIN;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${p(Math.floor(total / 60))}:${p(total % 60)}`;
+}

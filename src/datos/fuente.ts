@@ -26,19 +26,31 @@ export const leerAjustes = () => leerJson<Ajustes>(K_AJUSTES);
 export const guardarAjustes = (a: Ajustes) => AsyncStorage.setItem(K_AJUSTES, JSON.stringify(a));
 export const leerGuardado = () => leerJson<Guardado>(K_ULTIMO);
 
-/** Lo que cada docente elige en Ajustes > Apariencia y Aviso de la mañana. */
+/** Lo que cada docente elige en Ajustes > Apariencia y Avisos. */
 export type Preferencias = {
   tema: TemaId;
   idioma: Idioma;
   aviso: { activo: boolean; hora: string };
+  /** Recordatorio del parte al acabar las clases del día. */
+  parte: { recordar: boolean };
 };
 
-export const PREFERENCIAS_INICIALES: Preferencias = { tema: 'laboratorio', idioma: 'es', aviso: { activo: false, hora: '07:30' } };
+export const PREFERENCIAS_INICIALES: Preferencias = {
+  tema: 'laboratorio',
+  idioma: 'es',
+  aviso: { activo: false, hora: '07:30' },
+  parte: { recordar: true },
+};
 const K_PREFERENCIAS = 'preferencias.v1';
 
 export async function leerPreferencias(): Promise<Preferencias> {
   const p = await leerJson<Partial<Preferencias>>(K_PREFERENCIAS);
-  return { ...PREFERENCIAS_INICIALES, ...p, aviso: { ...PREFERENCIAS_INICIALES.aviso, ...p?.aviso } };
+  return {
+    ...PREFERENCIAS_INICIALES,
+    ...p,
+    aviso: { ...PREFERENCIAS_INICIALES.aviso, ...p?.aviso },
+    parte: { ...PREFERENCIAS_INICIALES.parte, ...p?.parte },
+  };
 }
 export const guardarPreferencias = (p: Preferencias) => AsyncStorage.setItem(K_PREFERENCIAS, JSON.stringify(p));
 
@@ -67,7 +79,8 @@ export function textoError(e: ErrorDescarga, idioma: Idioma = 'es'): string {
 }
 
 export type ResultadoDescarga =
-  | { ok: true; guardado: Guardado; normalizado: Normalizado }
+  /** `registrado`: sesiones que el script acaba de apuntar en el registro con este resumen. */
+  | { ok: true; guardado: Guardado; normalizado: Normalizado; registrado: string[] }
   | { ok: false; error: ErrorDescarga };
 
 type RespuestaScript = {
@@ -78,6 +91,7 @@ type RespuestaScript = {
   datos?: unknown;
   /** Solo al pedir un resumen nuevo: cuándo se lanzó la tarea (ISO). */
   pedidoEn?: string;
+  registrado?: unknown;
 };
 
 const ERRORES_SCRIPT = ['clave', 'sin_archivos', 'json_invalido', 'sin_token'] as const;
@@ -145,6 +159,7 @@ export async function descargar(a: Ajustes, fetchFn: typeof fetch = fetch): Prom
     ok: true,
     normalizado,
     guardado: { datos: r.resp.datos, archivo: r.resp.archivo ?? '', descargadoEn: new Date().toISOString() },
+    registrado: Array.isArray(r.resp.registrado) ? r.resp.registrado.map(String) : [],
   };
 }
 

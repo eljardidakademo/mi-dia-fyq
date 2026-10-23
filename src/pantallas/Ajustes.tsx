@@ -178,6 +178,24 @@ export function Ajustes({ c, inicial, guardar, cerrar, prefs, cambiarPrefs, esta
         {!!estadoAvisos && prefs.aviso.activo && <Text style={[s.nota, { color: c.tinta2 }]}>{estadoAvisos}</Text>}
       </View>
 
+      {/* Recordatorio del parte */}
+      <View style={[s.seccion, { backgroundColor: c.superficie, borderColor: c.borde }]}>
+        <Text style={[s.seccionTitulo, { color: c.tinta }]}>{t.recordarParte}</Text>
+        <Text style={[s.texto, { color: c.tinta2 }]}>{t.recordarParteTexto}</Text>
+        <View style={s.filaAviso}>
+          <Text style={[s.botonTexto, { color: c.tinta, flex: 1 }]}>{t.recordarParteActivo}</Text>
+          <Switch
+            value={prefs.parte.recordar}
+            onValueChange={(recordar) => cambiarPrefs({ ...prefs, parte: { recordar } })}
+            trackColor={{ true: c.acento, false: c.borde }}
+            thumbColor={c.superficie}
+          />
+        </View>
+        {!!estadoAvisos && !prefs.aviso.activo && prefs.parte.recordar && (
+          <Text style={[s.nota, { color: c.tinta2 }]}>{estadoAvisos}</Text>
+        )}
+      </View>
+
       {/* Widget (solo Android) */}
       {Platform.OS === 'android' && (
         <View style={[s.seccion, { backgroundColor: c.superficie, borderColor: c.borde }]}>
