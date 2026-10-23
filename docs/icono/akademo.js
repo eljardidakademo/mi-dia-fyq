@@ -4,7 +4,8 @@ const TINTA = b64('logo_tinta.png'), BLANCO = b64('logo_blanco.png');
 // Hoja de calendario con el búho de la academia y una marca de «hecho».
 module.exports = function svg({ tam = 1024, escala = 1, fondo = '#2350D8', mono = false } = {}) {
   const k = escala * (tam / 1024);
-  const o = tam / 2 - 512 * k;
+  // Centro del conjunto (hoja + marca), no del lienzo: así queda centrado al recortarlo.
+  const ox = tam / 2 - 565 * k, oy = tam / 2 - 560 * k;
   const hoja = mono
     ? `<rect x="222" y="242" width="580" height="600" rx="70" fill="none" stroke="#fff" stroke-width="28"/>
        <rect x="222" y="242" width="580" height="130" rx="60" fill="#fff"/>`
@@ -16,7 +17,7 @@ module.exports = function svg({ tam = 1024, escala = 1, fondo = '#2350D8', mono 
     <path d="M736 826 L776 866 L850 784" fill="none" stroke="${mono ? '#000' : '#fff'}" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" ${mono ? 'style="mix-blend-mode:destination-out"' : ''}/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${tam}" height="${tam}" viewBox="0 0 ${tam} ${tam}">
   ${fondo ? `<rect width="${tam}" height="${tam}" fill="${fondo}"/>` : ''}
-  <g transform="translate(${o} ${o}) scale(${k})">
+  <g transform="translate(${ox} ${oy}) scale(${k})">
     ${hoja}${anillas}
     <image href="${mono ? BLANCO : TINTA}" x="302" y="402" width="420" height="420"/>
     ${mono ? '' : marca}

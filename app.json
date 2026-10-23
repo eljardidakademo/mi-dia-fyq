@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mi día FyQ",
     "slug": "mi-dia-fyq",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.eljardidakademo.midiafyq",
-      "versionCode": 6,
+      "versionCode": 7,
       "adaptiveIcon": {
         "backgroundColor": "#2350D8",
         "foregroundImage": "./assets/android-icon-foreground.png",
