@@ -9,6 +9,9 @@ export type EstadoFranja = 'hecha' | 'pasada' | 'ahora' | 'siguiente' | 'futura'
 export type FranjaVista = Franja & { estado: EstadoFranja };
 export type Alerta = { nivel: 'error' | 'aviso' | 'info'; texto: string };
 
+/** Días hacia delante de exámenes y entregas que se ven en Hoy. */
+export const DIAS_FECHAS_HOY = 21;
+
 export type Vista = {
   hoy: string;
   fechaTexto: string;
@@ -92,8 +95,9 @@ export function construirVista({ docente, ahora, dia, problemas = [], errorDesca
   }
 
   const fechas = (dia?.fechas ?? [])
-    .filter((f) => f.fecha >= hoy)
-    .map((f) => ({ ...f, enDias: diasEntre(hoy, f.fecha) }));
+    .map((f) => ({ ...f, enDias: diasEntre(hoy, f.fecha) }))
+    // El resumen trae todo el trimestre para el calendario; en Hoy, solo lo cercano.
+    .filter((f) => f.enDias >= 0 && f.enDias <= DIAS_FECHAS_HOY);
 
   return {
     hoy,

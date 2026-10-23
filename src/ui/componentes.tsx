@@ -194,14 +194,14 @@ export function Preparar({ c, v }: ConC & { v: Vista }) {
   );
 }
 
-export function Fechas({ c, v }: ConC & { v: Vista }) {
+export function Fechas({ c, fechas, titulo }: ConC & { fechas: Vista['fechas']; titulo?: string }) {
   const t = useTextos();
   const idioma = useIdioma();
-  if (!v.fechas.length) return null;
+  if (!fechas.length) return null;
   const est = { fijado: [c.verde, c.verdeSuave], provisional: [c.ambar, c.ambarSuave], 'por confirmar': [c.rojo, c.rojoSuave] } as const;
   return (
-    <Seccion c={c} titulo={t.examenesEntregas}>
-      {v.fechas.map((f, i) => (
+    <Seccion c={c} titulo={titulo ?? t.examenesEntregas}>
+      {fechas.map((f, i) => (
         <View key={i} style={s.filaLista}>
           <View style={[s.calendario, { borderColor: c.borde }]}>
             <Text style={[s.calMes, { backgroundColor: f.tipo === 'examen' ? c.rojo : c.acento }]}>{mesCorto(f.fecha, idioma).toUpperCase()}</Text>

@@ -71,7 +71,7 @@ const es = {
   examen: 'Examen',
   entrega: 'Entrega',
   estadoFecha: { fijado: 'fijado', provisional: 'provisional', 'por confirmar': 'por confirmar' },
-  enDias: (n: number) => (n === 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} días`),
+  enDias: (n: number) => (n === 0 ? 'hoy' : n === 1 ? 'mañana' : n === -1 ? 'ayer' : n < 0 ? `hace ${-n} días` : `en ${n} días`),
   ritmo: 'Ritmo respecto a la programación',
   avisos: 'Avisos',
 
@@ -143,6 +143,12 @@ const es = {
   sesionesDe: (h: number, t: number) => `${h} de ${t} sesiones`,
   sinAvance: 'El avance de cada unidad llegará con el próximo resumen.',
   sinPrevisto: 'Lo previsto de cada clase llegará con el próximo resumen.',
+  vistaSemana: 'Semana',
+  vistaMes: 'Mes',
+  diasCortos: ['L', 'M', 'X', 'J', 'V'],
+  sinFechasMes: 'El resumen no trae exámenes ni entregas para este mes.',
+  mesAnterior: 'Mes anterior',
+  mesSiguiente: 'Mes siguiente',
   hechaCorta: 'hecha',
 
   // Widget
@@ -213,7 +219,7 @@ const va: Textos = {
   examen: 'Examen',
   entrega: 'Entrega',
   estadoFecha: { fijado: 'fixat', provisional: 'provisional', 'por confirmar': 'per confirmar' },
-  enDias: (n) => (n === 0 ? 'hui' : n === 1 ? 'demà' : `d'ací a ${n} dies`),
+  enDias: (n) => (n === 0 ? 'hui' : n === 1 ? 'demà' : n === -1 ? 'ahir' : n < 0 ? `fa ${-n} dies` : `d'ací a ${n} dies`),
   ritmo: 'Ritme respecte a la programació',
   avisos: 'Avisos',
 
@@ -281,6 +287,12 @@ const va: Textos = {
   sesionesDe: (h, t) => `${h} de ${t} sessions`,
   sinAvance: "L'avanç de cada unitat arribarà amb el pròxim resum.",
   sinPrevisto: 'El que està previst en cada classe arribarà amb el pròxim resum.',
+  vistaSemana: 'Setmana',
+  vistaMes: 'Mes',
+  diasCortos: ['Dl', 'Dt', 'Dc', 'Dj', 'Dv'],
+  sinFechasMes: 'El resum no porta exàmens ni entregues per a aquest mes.',
+  mesAnterior: 'Mes anterior',
+  mesSiguiente: 'Mes següent',
   hechaCorta: 'feta',
 
   ahoraW: 'Ara',
@@ -347,7 +359,7 @@ const en: Textos = {
   examen: 'Exam',
   entrega: 'Deadline',
   estadoFecha: { fijado: 'set', provisional: 'provisional', 'por confirmar': 'to confirm' },
-  enDias: (n) => (n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`),
+  enDias: (n) => (n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n < 0 ? `${-n} days ago` : `in ${n} days`),
   ritmo: 'Pace vs. the syllabus',
   avisos: 'Notices',
 
@@ -414,6 +426,12 @@ const en: Textos = {
   sesionesDe: (h, t) => `${h} of ${t} sessions`,
   sinAvance: 'Progress for each unit will arrive with the next summary.',
   sinPrevisto: "What's planned for each class will arrive with the next summary.",
+  vistaSemana: 'Week',
+  vistaMes: 'Month',
+  diasCortos: ['M', 'T', 'W', 'T', 'F'],
+  sinFechasMes: 'The summary has no exams or deadlines for this month.',
+  mesAnterior: 'Previous month',
+  mesSiguiente: 'Next month',
   hechaCorta: 'done',
 
   ahoraW: 'Now',

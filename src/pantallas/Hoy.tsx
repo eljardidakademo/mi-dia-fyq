@@ -150,7 +150,7 @@ export function Hoy({
 
       <Corregir c={c} v={v} />
       <Preparar c={c} v={v} />
-      <Fechas c={c} v={v} />
+      <Fechas c={c} fechas={v.fechas} />
       <RitmoGrupos c={c} v={v} />
       <Avisos c={c} v={v} />
     </ScrollView>

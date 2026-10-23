@@ -1,20 +1,75 @@
+import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import docenteJson from '../config/docente.json';
+import type { Docente } from '../config/tipos';
 import { fechaCorta } from '../datos/calendario';
+import { construirMes, type Mes } from '../datos/mes';
 import type { Semana as TSemana } from '../datos/semana';
-import { Etiqueta, Seccion } from '../ui/componentes';
+import type { MiDia } from '../datos/tipos';
+import { Etiqueta, Fechas, Seccion } from '../ui/componentes';
 import { colorGrupo, colorRitmo, fuentes, useIdioma, useTextos, type Colores } from '../ui/tema';
 
-type Props = { c: Colores; s: TSemana; volver: () => void; refrescando: boolean; refrescar: () => void };
+type Props = {
+  c: Colores;
+  s: TSemana;
+  dia: MiDia | null;
+  hoy: string;
+  volver: () => void;
+  refrescando: boolean;
+  refrescar: () => void;
+};
 
-const CODIGOS = docenteJson.grupos.map((g) => g.codigo);
+const docente = docenteJson as Docente;
+const CODIGOS = docente.grupos.map((g) => g.codigo);
 
-/** Vista de lunes a viernes y avance de cada unidad. */
-export function Semana({ c, s, volver, refrescando, refrescar }: Props) {
+/** Vista de lunes a viernes y avance de cada unidad, o el mes con exámenes y entregas. */
+export function Semana({ c, s, dia, hoy, volver, refrescando, refrescar }: Props) {
   const t = useTextos();
   const idioma = useIdioma();
+  const [verMes, setVerMes] = useState(false);
+  const [desplazamiento, setDesplazamiento] = useState(0);
+  const mes = useMemo(() => construirMes(docente, dia, hoy, desplazamiento, idioma), [dia, hoy, desplazamiento, idioma]);
   const hayPrevisto = s.dias.some((d) => d.clases.some((x) => !!x.previsto));
+
+  const pestanas = (
+    <View style={[st.pestanas, { borderColor: c.borde, backgroundColor: c.superficie }]}>
+      {[false, true].map((m) => (
+        <Pressable
+          key={String(m)}
+          style={[st.pestana, verMes === m && { backgroundColor: c.acento }]}
+          onPress={() => setVerMes(m)}
+          accessibilityState={{ selected: verMes === m }}
+        >
+          <Text style={[st.pestanaTexto, { color: verMes === m ? c.superficie : c.tinta2 }]}>{m ? t.vistaMes : t.vistaSemana}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+
+  if (verMes) {
+    return (
+      <ScrollView
+        style={{ backgroundColor: c.fondo }}
+        contentContainerStyle={st.contenido}
+        refreshControl={<RefreshControl refreshing={refrescando} onRefresh={refrescar} colors={[c.acento]} tintColor={c.acento} />}
+      >
+        <View style={st.cabecera}>
+          <Text style={[st.titulo, { color: c.tinta }]}>{t.examenesEntregas}</Text>
+          <Pressable onPress={volver} hitSlop={12}>
+            <Text style={[st.volver, { color: c.acento }]}>{t.volverHoy}</Text>
+          </Pressable>
+        </View>
+        {pestanas}
+        <CalendarioMes c={c} m={mes} mover={(n) => setDesplazamiento((d) => d + n)} />
+        {mes.fechas.length ? (
+          <Fechas c={c} fechas={mes.fechas} titulo={mes.titulo} />
+        ) : (
+          <Text style={[st.nota, { color: c.tenue, marginTop: 0 }]}>{t.sinFechasMes}</Text>
+        )}
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView
@@ -28,6 +83,7 @@ export function Semana({ c, s, volver, refrescando, refrescar }: Props) {
           <Text style={[st.volver, { color: c.acento }]}>{t.volverHoy}</Text>
         </Pressable>
       </View>
+      {pestanas}
       {!hayPrevisto && <Text style={[st.nota, { color: c.tenue }]}>{t.sinPrevisto}</Text>}
 
       {s.dias.map((d) => {
@@ -122,7 +178,77 @@ export function Semana({ c, s, volver, refrescando, refrescar }: Props) {
   );
 }
 
+/** Rejilla de lunes a viernes: punto rojo si hay examen y azul si hay entrega. */
+function CalendarioMes({ c, m, mover }: { c: Colores; m: Mes; mover: (n: number) => void }) {
+  const t = useTextos();
+  return (
+    <View style={[st.dia, { backgroundColor: c.superficie, borderColor: c.borde, borderWidth: 1 }]}>
+      <View style={st.mesCabeza}>
+        <Pressable onPress={() => mover(-1)} hitSlop={10} accessibilityLabel={t.mesAnterior} style={[st.flecha, { borderColor: c.borde }]}>
+          <Text style={[st.flechaTexto, { color: c.acento }]}>‹</Text>
+        </Pressable>
+        <Text style={[st.mesNombre, { color: c.tinta }]}>{m.titulo}</Text>
+        <Pressable onPress={() => mover(1)} hitSlop={10} accessibilityLabel={t.mesSiguiente} style={[st.flecha, { borderColor: c.borde }]}>
+          <Text style={[st.flechaTexto, { color: c.acento }]}>›</Text>
+        </Pressable>
+      </View>
+      <View style={st.fila}>
+        {t.diasCortos.map((d, i) => (
+          <Text key={i} style={[st.celdaCabeza, { color: c.tenue }]}>
+            {d}
+          </Text>
+        ))}
+      </View>
+      {m.semanas.map((sem) => (
+        <View key={sem[0].fecha} style={st.fila}>
+          {sem.map((d) => (
+            <View
+              key={d.fecha}
+              style={[
+                st.celda,
+                d.esHoy && { borderColor: c.acento, borderWidth: 2 },
+                d.lectivo && d.delMes && { backgroundColor: c.superficie2 },
+                !d.delMes && st.pasado,
+              ]}
+            >
+              <Text style={[st.celdaNumero, { color: d.delMes ? (d.lectivo ? c.tinta : c.tenue) : c.tenue }]}>{d.numero}</Text>
+              <View style={st.puntos}>
+                {Array.from({ length: d.examenes }, (_, i) => (
+                  <View key={`x${i}`} style={[st.punto, { backgroundColor: c.rojo }]} />
+                ))}
+                {Array.from({ length: d.entregas }, (_, i) => (
+                  <View key={`e${i}`} style={[st.punto, { backgroundColor: c.azul }]} />
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+      <View style={st.leyenda}>
+        <View style={[st.punto, { backgroundColor: c.rojo }]} />
+        <Text style={[st.pequeno, { color: c.tinta2 }]}>{t.examen}</Text>
+        <View style={[st.punto, { backgroundColor: c.azul, marginLeft: 10 }]} />
+        <Text style={[st.pequeno, { color: c.tinta2 }]}>{t.entrega}</Text>
+      </View>
+    </View>
+  );
+}
+
 const st = StyleSheet.create({
+  pestanas: { flexDirection: 'row', borderWidth: 1, borderRadius: 999, padding: 3, alignSelf: 'flex-start' },
+  pestana: { borderRadius: 999, paddingHorizontal: 16, paddingVertical: 6 },
+  pestanaTexto: { fontFamily: fuentes.textoNegrita, fontSize: 14 },
+  mesCabeza: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  flecha: { width: 32, height: 32, borderWidth: 1, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  flechaTexto: { fontFamily: fuentes.monoNegrita, fontSize: 20, lineHeight: 22 },
+  fila: { flexDirection: 'row', gap: 4 },
+  mesNombre: { flex: 1, textAlign: 'center', fontFamily: fuentes.tituloMedio, fontSize: 17 },
+  celdaCabeza: { flex: 1, textAlign: 'center', fontFamily: fuentes.textoNegrita, fontSize: 13 },
+  celda: { flex: 1, minHeight: 48, borderRadius: 8, padding: 4, alignItems: 'center', gap: 3, borderWidth: 1, borderColor: 'transparent' },
+  celdaNumero: { fontFamily: fuentes.mono, fontSize: 15 },
+  puntos: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 3 },
+  punto: { width: 8, height: 8, borderRadius: 4 },
+  leyenda: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
   contenido: { padding: 16, gap: 12, paddingBottom: 40 },
   cabecera: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   titulo: { fontFamily: fuentes.titulo, fontSize: 24, flex: 1 },

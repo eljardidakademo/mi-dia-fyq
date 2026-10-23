@@ -341,6 +341,8 @@ export default function App() {
           <Semana
             c={c}
             s={semana}
+            dia={normalizado?.dia ?? null}
+            hoy={hoy}
             volver={() => setVerSemana(false)}
             refrescando={refrescando}
             refrescar={refrescar}
