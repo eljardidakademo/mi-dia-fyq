@@ -113,6 +113,12 @@ const es = {
   llevar: (cosas: string) => `Llevar: ${cosas}`,
   corregirN: (n: number) => `Corregir: ${n} pendiente${n === 1 ? '' : 's'}`,
   canalAviso: 'Aviso de la mañana',
+  canalParte: 'Recordatorio del parte',
+  recordarParteTitulo: '¿Dictas el parte de hoy?',
+  recordarParteCuerpo: 'Han acabado las clases. Toca aquí y cuenta qué has hecho en cada grupo.',
+  recordarParte: 'Recordatorio del parte',
+  recordarParteTexto: 'Diez minutos después de la última clase, si aún no has mandado el parte del día. Al tocarlo se abre el dictado.',
+  recordarParteActivo: 'Recordármelo',
 
   // Partes de clase
   parte: 'Parte',
@@ -247,6 +253,12 @@ const va: Textos = {
   llevar: (cosas) => `Portar: ${cosas}`,
   corregirN: (n) => `Corregir: ${n} pendent${n === 1 ? '' : 's'}`,
   canalAviso: 'Avís del matí',
+  canalParte: 'Recordatori del part',
+  recordarParteTitulo: 'Dictes el part de hui?',
+  recordarParteCuerpo: "Han acabat les classes. Toca ací i conta què has fet en cada grup.",
+  recordarParte: 'Recordatori del part',
+  recordarParteTexto: "Deu minuts després de l'última classe, si encara no has enviat el part del dia. En tocar-lo s'obri el dictat.",
+  recordarParteActivo: 'Recordar-m\'ho',
 
   parte: 'Part',
   parteEnviado: 'Part enviat',
@@ -374,6 +386,12 @@ const en: Textos = {
   llevar: (cosas) => `Bring: ${cosas}`,
   corregirN: (n) => `To mark: ${n}`,
   canalAviso: 'Morning reminder',
+  canalParte: 'Class report reminder',
+  recordarParteTitulo: "Dictate today's report?",
+  recordarParteCuerpo: 'Classes are over. Tap here and say what you did with each group.',
+  recordarParte: 'Report reminder',
+  recordarParteTexto: "Ten minutes after your last class, if you haven't sent today's report yet. Tap it to start dictating.",
+  recordarParteActivo: 'Remind me',
 
   parte: 'Log',
   parteEnviado: 'Log sent',

@@ -2,6 +2,7 @@ import { AtkinsonHyperlegible_400Regular, AtkinsonHyperlegible_700Bold } from '@
 import { FamiljenGrotesk_600SemiBold, FamiljenGrotesk_700Bold } from '@expo-google-fonts/familjen-grotesk';
 import { JetBrainsMono_500Medium, JetBrainsMono_700Bold } from '@expo-google-fonts/jetbrains-mono';
 import { useFonts } from 'expo-font';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, BackHandler, Platform, View } from 'react-native';
@@ -264,13 +265,30 @@ export default function App() {
     if (!cargado) return;
     const pedirPermiso = pedirPermisoAviso.current;
     pedirPermisoAviso.current = false;
-    programarAvisos(docente, normalizado?.dia ?? null, prefs, { pedirPermiso }).then(setEstadoAvisos);
+    const parteHechoHoy = estadosPartes[idParteDia(hoy)]?.estado === 'enviado';
+    programarAvisos(docente, normalizado?.dia ?? null, prefs, { pedirPermiso, parteHechoHoy }).then(setEstadoAvisos);
     pintarWidgets(guardado, prefs);
-  }, [cargado, normalizado, guardado, prefs]);
+  }, [cargado, normalizado, guardado, prefs, estadosPartes, hoy]);
+
+  // Al tocar el recordatorio del parte se abre el dictado.
+  const respuestaAviso = Notifications.useLastNotificationResponse();
+  const respuestaAtendida = useRef<string | null>(null);
+  useEffect(() => {
+    if (!cargado || !respuestaAviso) return;
+    const id = respuestaAviso.notification.request.identifier;
+    const datos = respuestaAviso.notification.request.content.data;
+    // Solo el de hoy: el último toque puede seguir ahí al volver a abrir la app otro día.
+    if (respuestaAtendida.current === id || datos?.abrir !== 'parte' || datos?.fecha !== hoy) return;
+    respuestaAtendida.current = id;
+    setVerAjustes(false);
+    setVerSemana(false);
+    setResultadoParte(null);
+    setParteAbierto(true);
+  }, [cargado, respuestaAviso, hoy]);
 
   const cambiarPrefs = useCallback((p: Preferencias) => {
     setPrefs((antes) => {
-      if (p.aviso.activo && !antes.aviso.activo) pedirPermisoAviso.current = true;
+      if ((p.aviso.activo && !antes.aviso.activo) || (p.parte.recordar && !antes.parte.recordar)) pedirPermisoAviso.current = true;
       return p;
     });
     guardarPreferencias(p);

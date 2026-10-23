@@ -2,7 +2,7 @@ import docenteJson from '../../config/docente.json';
 import type { Docente } from '../../config/tipos';
 import ejemplo from '../../datos/__tests__/fixtures/ejemplo_2026-10-08.json';
 import { normalizar } from '../../datos/normalizar';
-import { datosWidget, lectivosProximos, textoAviso } from '../contenido';
+import { datosWidget, horaRecordatorioParte, lectivosProximos, textoAviso } from '../contenido';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -57,5 +57,17 @@ describe('widget', () => {
     const d = datosWidget(docente, dia, a('2026-10-08', '17:00'), '2026-10-08');
     expect(d.tipo === 'dia' && d.clase).toBeNull();
     expect(d.tipo === 'dia' && d.despues).toBe('Próximo día: Martes 13/10 · 08:00 1BD');
+  });
+});
+
+describe('recordatorio del parte', () => {
+  test('diez minutos después de la última clase del día', () => {
+    expect(horaRecordatorioParte(docente, '2026-10-19')).toBe('13:15'); // lunes: 4º ESO B hasta las 13:05
+    expect(horaRecordatorioParte(docente, '2026-10-20')).toBe('10:55'); // martes: 2º ESO C hasta las 10:45
+  });
+
+  test('sin clases, sin recordatorio', () => {
+    expect(horaRecordatorioParte(docente, '2026-10-09')).toBeNull();
+    expect(horaRecordatorioParte(docente, '2026-10-24')).toBeNull();
   });
 });
