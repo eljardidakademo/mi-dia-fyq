@@ -25,6 +25,9 @@ type Props = {
   abrirParte: () => void;
   estadoParte?: EstadoParte;
   partesEnCola: number;
+  /** Avisos que el usuario ha quitado deslizándolos. */
+  alertasOcultas: Set<string>;
+  ocultarAlerta: (texto: string) => void;
 };
 
 const hhmm = (iso?: string | null) => {
@@ -49,6 +52,8 @@ export function Hoy({
   abrirParte,
   estadoParte,
   partesEnCola,
+  alertasOcultas,
+  ocultarAlerta,
 }: Props) {
   const t = useTextos();
   const generado = hhmm(v.generadoEn);
@@ -117,7 +122,7 @@ export function Hoy({
       {!pidiendo && aviso && <Text style={[s.pedirNota, { color: aviso.ok ? c.verde : c.rojo }]}>{aviso.texto}</Text>}
       {partesEnCola > 0 && <Text style={[s.pedirNota, { color: c.ambar }]}>{t.partesEnCola(partesEnCola)}</Text>}
 
-      <Alertas c={c} v={v} />
+      <Alertas c={c} v={v} ocultas={alertasOcultas} ocultar={ocultarAlerta} />
 
       {v.lectivo ? (
         <View style={{ gap: 10 }}>

@@ -32,7 +32,8 @@ const es = {
     sin_url: 'Falta la dirección del script. Ponla en Ajustes.',
     sin_red: 'Sin conexión o el script no responde. Muestro lo último descargado.',
     http: (status: number) => `El script respondió con un error (HTTP ${status}).`,
-    no_json: 'El script no devolvió JSON. Comprueba que está implementado como aplicación web con acceso «Cualquier usuario».',
+    no_json: (detalle?: string) =>
+      `El script no devolvió datos. ${detalle ? `Google dice: «${detalle}». ` : ''}Revisa en el script que CARPETA_ID es el id de la carpeta y que la implementación tiene acceso «Cualquier usuario».`,
     clave: 'La clave no coincide con la del script de Google. Revísala en Ajustes.',
     sin_archivos: 'El script no encuentra ningún mi_dia_fyq_*.json en la carpeta. ¿Ha guardado ya la tarea alguno?',
     json_invalido: 'El último archivo que dejó la tarea no es un JSON válido.',
@@ -170,7 +171,8 @@ const va: Textos = {
     sin_url: "Falta l'adreça de l'script. Posa-la en Ajustos.",
     sin_red: "Sense connexió o l'script no respon. Mostre l'últim descarregat.",
     http: (status) => `L'script ha respost amb un error (HTTP ${status}).`,
-    no_json: "L'script no ha tornat JSON. Comprova que està implementat com a aplicació web amb accés «Qualsevol usuari».",
+    no_json: (detalle) =>
+      `L'script no ha tornat dades. ${detalle ? `Google diu: «${detalle}». ` : ''}Revisa en l'script que CARPETA_ID és l'id de la carpeta i que la implementació té accés «Qualsevol usuari».`,
     clave: "La clau no coincideix amb la de l'script de Google. Revisa-la en Ajustos.",
     sin_archivos: "L'script no troba cap mi_dia_fyq_*.json a la carpeta. Ja n'ha guardat algun la tasca?",
     json_invalido: "L'últim fitxer que va deixar la tasca no és un JSON vàlid.",
@@ -297,7 +299,8 @@ const en: Textos = {
     sin_url: 'The script address is missing. Add it in Settings.',
     sin_red: "No connection or the script isn't responding. Showing the last download.",
     http: (status) => `The script returned an error (HTTP ${status}).`,
-    no_json: "The script didn't return JSON. Check it is deployed as a web app with access set to “Anyone”.",
+    no_json: (detalle) =>
+      `The script didn't return data. ${detalle ? `Google says: “${detalle}”. ` : ''}Check in the script that CARPETA_ID is the folder id and that the deployment's access is “Anyone”.`,
     clave: "The key doesn't match the Google script's key. Check it in Settings.",
     sin_archivos: "The script can't find any mi_dia_fyq_*.json in the folder. Has the task saved one yet?",
     json_invalido: 'The last file the task saved is not valid JSON.',

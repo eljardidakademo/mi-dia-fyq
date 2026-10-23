@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
+import { Animated, PanResponder, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import docenteJson from '../config/docente.json';
 import { mesCorto, desdeIso } from '../datos/calendario';
@@ -268,18 +268,51 @@ export function Avisos({ c, v }: ConC & { v: Vista }) {
   );
 }
 
-export function Alertas({ c, v }: ConC & { v: Vista }) {
+/** Avisos de arriba. Se quitan deslizándolos hacia un lado (o con la ✕). */
+export function Alertas({ c, v, ocultas, ocultar }: ConC & { v: Vista; ocultas: Set<string>; ocultar: (texto: string) => void }) {
   return (
     <>
-      {v.alertas.map((a, i) => {
-        const [color, fondo] = a.nivel === 'error' ? [c.rojo, c.rojoSuave] : a.nivel === 'aviso' ? [c.ambar, c.ambarSuave] : [c.tinta2, c.superficie2];
-        return (
-          <View key={i} style={[s.alerta, { backgroundColor: fondo, borderColor: color }]}>
-            <Text style={[s.texto, { color }]}>{a.texto}</Text>
-          </View>
-        );
-      })}
+      {v.alertas
+        .filter((a) => !ocultas.has(a.texto))
+        .map((a) => {
+          const [color, fondo] = a.nivel === 'error' ? [c.rojo, c.rojoSuave] : a.nivel === 'aviso' ? [c.ambar, c.ambarSuave] : [c.tinta2, c.superficie2];
+          return <AlertaDeslizable key={a.texto} texto={a.texto} color={color} fondo={fondo} quitar={() => ocultar(a.texto)} />;
+        })}
     </>
+  );
+}
+
+// Más allá de esta distancia (o con un gesto rápido) el aviso sale de la pantalla.
+const UMBRAL_DESLIZAR = 90;
+
+function AlertaDeslizable({ texto, color, fondo, quitar }: { texto: string; color: string; fondo: string; quitar: () => void }) {
+  const x = useRef(new Animated.Value(0)).current;
+  const salir = (hacia: number) =>
+    Animated.timing(x, { toValue: hacia * 500, duration: 180, useNativeDriver: false }).start(() => quitar());
+  const gesto = useRef(
+    PanResponder.create({
+      // Solo gestos claramente horizontales, para no robarle el desplazamiento a la lista.
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+      onPanResponderMove: Animated.event([null, { dx: x }], { useNativeDriver: false }),
+      onPanResponderRelease: (_, g) => {
+        if (Math.abs(g.dx) > UMBRAL_DESLIZAR || Math.abs(g.vx) > 0.8) salir(Math.sign(g.dx) || 1);
+        else Animated.spring(x, { toValue: 0, useNativeDriver: false }).start();
+      },
+      onPanResponderTerminate: () => Animated.spring(x, { toValue: 0, useNativeDriver: false }).start(),
+    }),
+  ).current;
+  const opacidad = x.interpolate({ inputRange: [-250, 0, 250], outputRange: [0.2, 1, 0.2], extrapolate: 'clamp' });
+
+  return (
+    <Animated.View
+      {...gesto.panHandlers}
+      style={[s.alerta, s.alertaFila, { backgroundColor: fondo, borderColor: color, opacity: opacidad, transform: [{ translateX: x }] }]}
+    >
+      <Text style={[s.texto, { color, flex: 1 }]}>{texto}</Text>
+      <Pressable onPress={() => salir(1)} hitSlop={12} accessibilityRole="button" accessibilityLabel="✕">
+        <Text style={[s.cerrar, { color }]}>✕</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -325,4 +358,6 @@ const s = StyleSheet.create({
   barra: { position: 'absolute', top: 2, bottom: 2, borderRadius: 3 },
   ritmoNum: { fontFamily: fuentes.monoNegrita, fontSize: 13, width: 36, textAlign: 'right' },
   alerta: { borderLeftWidth: 4, borderRadius: 8, padding: 12 },
+  alertaFila: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  cerrar: { fontSize: 16, fontWeight: '700', lineHeight: 20 },
 });

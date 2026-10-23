@@ -47,6 +47,24 @@ const ESPERA_ENTRE_PARTES_MS = 60 * 1000;
 const TITULO_PARTES = 'Partes FyQ 26-27';
 
 function doGet(e) {
+  return protegido(() => atenderGet(e));
+}
+
+function doPost(e) {
+  return protegido(() => atenderPost(e));
+}
+
+// Cualquier fallo del script vuelve como JSON con su motivo, en vez de la página de error
+// de Google, para que la app pueda decir qué pasa.
+function protegido(fn) {
+  try {
+    return fn();
+  } catch (err) {
+    return responder({ ok: false, error: 'script', detalle: String(err).slice(0, 300) });
+  }
+}
+
+function atenderGet(e) {
   const props = PropertiesService.getScriptProperties();
   if (!e || !e.parameter || e.parameter.clave !== props.getProperty('CLAVE')) {
     return responder({ ok: false, error: 'clave', detalle: 'Clave incorrecta o ausente.' });
@@ -54,7 +72,7 @@ function doGet(e) {
 
   if (e.parameter.accion === 'regenerar') return responder(regenerar(props));
 
-  const archivo = buscarMasReciente(props.getProperty('CARPETA_ID'));
+  const archivo = buscarMasReciente(idCarpeta(props));
   if (!archivo) {
     return responder({ ok: false, error: 'sin_archivos', detalle: 'No hay ningún mi_dia_fyq_*.json en la carpeta.' });
   }
@@ -72,7 +90,7 @@ function doGet(e) {
   }
 }
 
-function doPost(e) {
+function atenderPost(e) {
   const props = PropertiesService.getScriptProperties();
   let cuerpo;
   try {
@@ -111,7 +129,7 @@ function recibirParte(props, p) {
 // El documento de partes vive en la carpeta de siempre. Se busca por título (por si alguien
 // lo recrea) y, si no existe, se crea con una cabecera que explica el formato.
 function documentoPartes(props) {
-  const carpeta = DriveApp.getFolderById(props.getProperty('CARPETA_ID'));
+  const carpeta = DriveApp.getFolderById(idCarpeta(props));
   const it = carpeta.getFilesByName(TITULO_PARTES);
   let masNuevo = null;
   while (it.hasNext()) {
@@ -212,6 +230,13 @@ function parsear(t) {
   } catch (err) {
     return JSON.parse(t.replace(/[“”]/g, '"'));
   }
+}
+
+// Admite el id tal cual o la dirección entera de la carpeta, con espacios de sobra.
+function idCarpeta(props) {
+  const v = String(props.getProperty('CARPETA_ID') || '').trim();
+  const m = /folders\/([\w-]+)/.exec(v);
+  return m ? m[1] : v;
 }
 
 function responder(obj) {

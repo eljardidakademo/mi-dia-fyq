@@ -136,8 +136,15 @@ describe('descargar', () => {
 
   test('página de inicio de sesión de Google en vez de JSON', async () => {
     const r = await descargar(aj, resp('<html>Iniciar sesión</html>'));
-    expect(r).toEqual({ ok: false, error: { codigo: 'no_json' } });
+    expect(r).toEqual({ ok: false, error: { codigo: 'no_json', detalle: 'Iniciar sesión' } });
     expect(textoError({ codigo: 'no_json' })).toContain('Cualquier usuario');
+    expect(textoError({ codigo: 'no_json', detalle: 'Iniciar sesión' })).toContain('«Iniciar sesión»');
+  });
+
+  test('de una página de error de Google se queda solo el texto', async () => {
+    const html = '<html><head><title>Error</title><style>p{}</style></head><body><p>Exception: No item with the given ID could be found.</p></body></html>';
+    const r = await descargar(aj, resp(html));
+    expect(r).toEqual({ ok: false, error: { codigo: 'no_json', detalle: 'Error Exception: No item with the given ID could be found.' } });
   });
 
   test('sin red', async () => {
