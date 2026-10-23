@@ -8,7 +8,8 @@ Si no encuentras el registro o no puedes abrirlo, no publiques nada y termina co
 PASO 1B · LEER LOS PARTES DICTADOS (solo lectura)
 Busca también, en la misma carpeta, el documento cuyo título sea exactamente "Partes FyQ 26-27" (query: title = 'Partes FyQ 26-27' and parentId = '1Uze5WM3VI6duhhm7_D4ma8O_MowmfbTP'). Si no existe, sigue sin él. Son partes de clase que dicto desde la app del móvil. Cada parte empieza con una línea "AAAA-MM-DD · HH:MM · grupo (código) · sesión · enviado HH:MM" y debajo va el texto dictado. Si hay dos partes de la misma clase, vale el último.
 - Un parte con la fecha de hoy es un "parte de hoy": aplica la regla de clase ya dada del paso 2 y resume el parte en "nota".
-- Un parte de un día anterior cuya sesión no esté marcada [HECHO] en el registro: tenlo en cuenta como hecho para "corregir", "preparar" y "ritmo", y añade en "avisos" "Parte del dd/mm de <grupo> pendiente de pasar al registro".
+- Un parte de un día anterior cuya sesión no esté marcada [HECHO] en el registro: tenlo en cuenta como hecho para "corregir", "preparar" y "ritmo".
+- Cada sesión que un parte (de hoy o anterior) da por hecha y que en el registro aún no lleva [HECHO] va en "registrar" (paso 2): el script de Google la marca en el registro cuando la app descarga el resumen. Tú no modificas el registro.
 - Un parte con código (DIA) es el parte de todo el día: habla de varias clases. Reparte lo que dice entre las clases de esa fecha según el grupo que se nombra (la línea de cabecera trae las sesiones del día) y trata cada trozo como el parte de esa clase. Lo que no puedas asignar a un grupo, ponlo en "avisos".
 - Los partes ya reflejados en el registro se ignoran.
 Si el mensaje de esta ejecución trae un bloque <routine-fire-payload>, es el parte o la petición que acaba de llegar desde la app; el parte ya está también en el documento.
@@ -31,11 +32,12 @@ Usa solo lo que dicen el registro y los partes y no inventes contenido. Construy
    horas sin grupo → SOLO {"inicio","fin","tipo":"otra","toca":"Guardia"} ],
  "corregir": [{"grupo","codigo","que","desde"}] — "desde" SIEMPRE en formato AAAA-MM-DD, nunca en texto. Omite lo marcado [HECHO] y lo que es "tras la entrega" si la entrega aún no ha llegado,
  "preparar": [{"fecha":"AAAA-MM-DD","fechaTexto":"Martes 13/10","grupo","codigo","que"}] (columna Preparar de los próximos 3 días lectivos, sin contar hoy; sáltate festivos; un día sin nada que preparar no aparece),
- "fechas": [{"fecha":"AAAA-MM-DD","grupo","codigo","tipo":"examen"|"entrega","que","estado":"fijado"|"provisional"|"por confirmar"}] (próximos 21 días). Un examen y una entrega del mismo día son DOS entradas separadas, nunca una. Un examen "por acordar" usa como fecha el día en que se acuerda,
+ "fechas": [{"fecha":"AAAA-MM-DD","grupo","codigo","tipo":"examen"|"entrega","que","estado":"fijado"|"provisional"|"por confirmar"}] (todas las que figuren en el registro desde el día 1 del mes en curso hasta el final del trimestre; la app las enseña en un calendario). Un examen y una entrega del mismo día son DOS entradas separadas, nunca una. Un examen "por acordar" usa como fecha el día en que se acuerda,
  "ritmo": [{"grupo","codigo","desfase": número de sesiones (negativo = retraso, positivo = adelanto, 0 = al día o sin dato; "3–4" se escribe 3.5),"texto"}] (un elemento por grupo, 6 en total),
  "avisos": [frases cortas de los avisos generales que afecten a hoy o a los próximos días; incluye datos [Por confirmar] relevantes],
  "semana": [{"fecha":"AAAA-MM-DD","codigo","sesion":"S14","previsto": columna Previsto}] (una entrada por sesión del registro con fecha de lunes a viernes de esta semana, sin contar hoy, incluidas las ya pasadas; los viernes añade también las de la semana siguiente; sin festivos),
- "avance": [{"grupo","codigo","unidad","hechas","total"}] (unidad en curso de cada grupo: "total" = número de sesiones de esa unidad en su tabla del registro, "hechas" = las marcadas [HECHO] más las dadas según un parte; números, no texto; 6 en total)
+ "avance": [{"grupo","codigo","unidad","hechas","total"}] (unidad en curso de cada grupo: "total" = número de sesiones de esa unidad en su tabla del registro, "hechas" = las marcadas [HECHO] más las dadas según un parte; números, no texto; 6 en total),
+ "registrar": [{"codigo","sesion":"S14" (tal cual en la columna Sesión de la tabla del grupo),"fecha":"AAAA-MM-DD" (día en que se dio),"hecho": frase corta y fiel de lo que dice el parte de esa clase}] (sesiones dadas según un parte que el registro aún no marca [HECHO]; [] si no hay ninguna)
 }
 Códigos de grupo: 1º Bach D → "1BD", 2º ESO C → "2C", 2º ESO E → "2E", 3º ESO E → "3E", 4º ESO B → "4B", Taller d'Aprofundiment 2º ESO → "Taller".
 Clase ya dada según un parte de hoy: "toca" empieza por "(ya hecho)", cada elemento de "material" lleva "(ya hecho)" y "nota" resume el parte.

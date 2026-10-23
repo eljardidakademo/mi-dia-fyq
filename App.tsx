@@ -112,12 +112,13 @@ export default function App() {
     if (r.ok) {
       setGuardado(r.guardado);
       setError(null);
+      if (r.registrado.length) setAvisoPedido({ ok: true, texto: t.apuntadoRegistro(r.registrado.join(', ')) });
     } else {
       setError(r.error);
     }
     setAhora(new Date());
     setRefrescando(false);
-  }, [ajustes]);
+  }, [ajustes, t]);
 
   // Pide a la tarea de Claude un resumen nuevo y espera a que llegue.
   // Espera a que la tarea deje un resumen distinto de `previo` y lo enseña.
@@ -130,7 +131,8 @@ export default function App() {
         setError(null);
         const estadoA = normalizar(r.guardado.datos).dia?.registroEstadoA;
         const igual = !!previo && mismoContenido(previo.datos, r.guardado.datos);
-        setAvisoPedido({ ok: true, texto: igual && estadoA ? t.resumenSinCambios(estadoA) : t.resumenNuevoListo });
+        const texto = igual && estadoA ? t.resumenSinCambios(estadoA) : t.resumenNuevoListo;
+        setAvisoPedido({ ok: true, texto: r.registrado.length ? `${texto} ${t.apuntadoRegistro(r.registrado.join(', '))}` : texto });
       } else {
         setAvisoPedido({ ok: false, texto: textoError(r.error, prefs.idioma) });
       }

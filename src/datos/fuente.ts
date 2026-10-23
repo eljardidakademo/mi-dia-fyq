@@ -79,7 +79,8 @@ export function textoError(e: ErrorDescarga, idioma: Idioma = 'es'): string {
 }
 
 export type ResultadoDescarga =
-  | { ok: true; guardado: Guardado; normalizado: Normalizado }
+  /** `registrado`: sesiones que el script acaba de apuntar en el registro con este resumen. */
+  | { ok: true; guardado: Guardado; normalizado: Normalizado; registrado: string[] }
   | { ok: false; error: ErrorDescarga };
 
 type RespuestaScript = {
@@ -90,6 +91,7 @@ type RespuestaScript = {
   datos?: unknown;
   /** Solo al pedir un resumen nuevo: cuándo se lanzó la tarea (ISO). */
   pedidoEn?: string;
+  registrado?: unknown;
 };
 
 const ERRORES_SCRIPT = ['clave', 'sin_archivos', 'json_invalido', 'sin_token'] as const;
@@ -157,6 +159,7 @@ export async function descargar(a: Ajustes, fetchFn: typeof fetch = fetch): Prom
     ok: true,
     normalizado,
     guardado: { datos: r.resp.datos, archivo: r.resp.archivo ?? '', descargadoEn: new Date().toISOString() },
+    registrado: Array.isArray(r.resp.registrado) ? r.resp.registrado.map(String) : [],
   };
 }
 

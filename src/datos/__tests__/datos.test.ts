@@ -128,6 +128,14 @@ describe('descargar', () => {
     expect((f as jest.Mock).mock.calls[0][0]).toBe('https://script.google.com/macros/s/X/exec?clave=a%20b');
   });
 
+  test('sesiones que el script acaba de apuntar en el registro', async () => {
+    const f = resp(JSON.stringify({ ok: true, archivo: 'x.json', datos: ejemplo, registrado: ['2C S14', '1BD S18'] }));
+    const r = await descargar(aj, f);
+    expect(r.ok && r.registrado).toEqual(['2C S14', '1BD S18']);
+    const sin = await descargar(aj, resp(JSON.stringify({ ok: true, archivo: 'x.json', datos: ejemplo, registroError: 'No encuentro' })));
+    expect(sin.ok && sin.registrado).toEqual([]);
+  });
+
   test('clave incorrecta', async () => {
     const r = await descargar(aj, resp(JSON.stringify({ ok: false, error: 'clave' })));
     expect(r).toEqual({ ok: false, error: { codigo: 'clave' } });

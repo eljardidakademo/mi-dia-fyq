@@ -57,6 +57,7 @@ const es = {
   pedirResumen: 'Pedir resumen nuevo',
   pidiendo: 'Pidiendo a Claude un resumen nuevo con lo que hay ahora en el registro. Suele tardar unos 2 minutos.',
   resumenNuevoListo: 'Resumen nuevo descargado.',
+  apuntadoRegistro: (sesiones: string) => `Apuntado en el registro: ${sesiones}.`,
   resumenSinCambios: (estadoA: string) =>
     `Resumen nuevo descargado, pero sin cambios: el registro sigue a ${estadoA} y no hay partes nuevos. Dicta el parte del día para que se actualice.`,
 
@@ -206,6 +207,7 @@ const va: Textos = {
   pedirResumen: 'Demanar resum nou',
   pidiendo: 'Demanant a Claude un resum nou amb el que hi ha ara en el registre. Sol tardar uns 2 minuts.',
   resumenNuevoListo: 'Resum nou descarregat.',
+  apuntadoRegistro: (sesiones) => `Apuntat en el registre: ${sesiones}.`,
   resumenSinCambios: (estadoA) =>
     `Resum nou descarregat, però sense canvis: el registre continua a ${estadoA} i no hi ha parts nous. Dicta el part del dia perquè s'actualitze.`,
 
@@ -346,6 +348,7 @@ const en: Textos = {
   pedirResumen: 'Request new summary',
   pidiendo: "Asking Claude for a new summary with what's in the log right now. It usually takes about 2 minutes.",
   resumenNuevoListo: 'New summary downloaded.',
+  apuntadoRegistro: (sesiones) => `Marked as done in the log: ${sesiones}.`,
   resumenSinCambios: (estadoA) =>
     `New summary downloaded, but nothing changed: the log is still as of ${estadoA} and there are no new logs. Dictate the day log to update it.`,
 
